@@ -1,0 +1,95 @@
+---
+title: "Econ 390 Russia maps"
+author: "Michelle Schultze"
+date: "2023-03-07"
+output:
+  word_document: default
+  html_document:
+    df_print: paged
+---
+
+Load packages & import data
+
+```{r load-import, message=FALSE, warning=FALSE}
+library(tidyverse)
+library(broom)
+library(tidymodels)
+library(ggplot2)
+library(ggthemes)
+library(pls)
+library(haven)
+library(maps)
+library(rgdal)
+library(maptools)
+library(sf)
+library(terra)
+library(plyr) 
+library(raster)   # for getData()
+```
+
+```{r map-0, message=FALSE, warning=FALSE, include=FALSE}
+#download.file("https://geodata.ucdavis.edu/gadm/gadm4.1/shp/gadm41_RUS_shp.zip", destfile="/Users/michelle/econ390/russia_map.zip")
+#system("unzip /Users/michelle/econ390/russia_map.zip")
+
+theme_bw()
+
+russia <- getData("GADM", country="RUS", level=0)
+```
+
+```{r map-orig}
+russia.df <- fortify(russia)
+system.time(
+  plot(ggplot()+
+         geom_polygon(data=russia.df, aes(x=long, y=lat, group=group), 
+                      fill="lightblue",color="grey20", size=0.15) +
+       xlim(0, 200) + coord_map() +
+         labs(title = "Russia: Layer 0"))
+)
+```
+
+
+*OUR REGIONS OF INTEREST: BORDER WITH UKRAINE*
+
+```{r warning=FALSE}
+russia@data$NAME_1
+# Regions that border Ukraine: Bryansk, Kursk, Belgorod, Voronezh, Rostov, Krasnodar, Adygea
+# Spellings in this dataset: c("Bryansk", "Kursk", "Belgorod", "Voronezh", "Rostov", "Krasnodar", "Adygey")
+
+russia <- getData("GADM", country="RUS", level=1)
+russia@data  <- russia@data %>%
+  mutate(onborder = if_else(NAME_1 %in% c("Bryansk", "Kursk", "Belgorod", "Voronezh", "Rostov", "Krasnodar", "Adygey"), TRUE, FALSE))
+russia.df <- fortify(russia)
+russia@data$id <- rownames(russia@data)
+russia.df <- join(russia.df,russia@data, by="id")
+
+system.time(
+  plot(ggplot(russia.df)+
+         geom_polygon(aes(x=long, y=lat, group=group, fill=onborder), 
+                      color="grey20", size=0.15) +
+       xlim(0, 200)+coord_map() +
+         labs(title = "Region of Interest: Border with Ukraine"))
+)
+
+
+```
+
+```{r zoom-in}
+russia <- getData("GADM", country="RUS", level=2)
+russia@data  <- russia@data %>%
+  mutate(onborder = if_else(NAME_1 %in% c("Bryansk", "Kursk", "Belgorod", "Voronezh", "Rostov", "Krasnodar", "Adygey"), TRUE, FALSE))
+russia.df <- fortify(russia)
+russia@data$id <- rownames(russia@data)
+russia.df <- join(russia.df,russia@data, by="id")
+russia.df <- russia.df[russia.df$onborder == TRUE, ]
+
+system.time(
+  plot(ggplot(russia.df)+
+         geom_polygon(aes(x=long, y=lat, group=group, fill=onborder), 
+                      color="grey20", size=0.15) + coord_map() +
+         labs(title = "Region of Interest: Border with Ukraine"))
+)
+```
+
+
+
+
