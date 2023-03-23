@@ -1,0 +1,98 @@
+---
+title: "Econ 390 Ukraine maps"
+author: "Michelle Schultze"
+date: "2023-03-23"
+output:
+  word_document: default
+  html_document:
+    df_print: paged
+---
+
+Load packages & import data
+
+```{r load-import, message=FALSE, warning=FALSE}
+library(tidyverse)
+library(broom)
+library(tidymodels)
+library(ggplot2)
+library(ggthemes)
+library(pls)
+library(haven)
+library(maps)
+library(rgdal)
+library(maptools)
+library(sf)
+library(terra)
+library(plyr) 
+library(raster)   # for getData()
+```
+
+```{r map-0, message=FALSE, warning=FALSE, include=FALSE}
+#download.file("https://geodata.ucdavis.edu/gadm/gadm4.1/shp/gadm41_RUS_shp.zip", destfile="/Users/michelle/econ390/ukraine_map.zip")
+#system("unzip /Users/michelle/econ390/ukraine_map.zip")
+
+theme_bw()
+
+ukraine <- getData("GADM", country="UKR", level=0)
+```
+
+```{r map-orig}
+ukraine.df <- fortify(ukraine)
+system.time(
+  plot(ggplot()+
+         geom_polygon(data=ukraine.df, aes(x=long, y=lat, group=group), 
+                      fill="lightblue",color="grey20", size=0.15) + coord_map() +
+         labs(title = "Ukraine: Layer 0"))
+)
+```
+
+
+*OUR REGIONS OF INTEREST: BORDER WITH UKRAINE*
+
+```{r warning=FALSE}
+ukraine <- getData("GADM", country="UKR", level=1)
+
+ukraine@data$NAME_1
+# Regions that border Ukraine: Sumy, Kharkiv, Luhans'k, Donets'k, Zaporizhzhya, Chernihiv, Crimea, Sevastopol
+# Spellings in this dataset: c("Sumy", "Kharkiv", "Luhans'k", "Donets'k", "Zaporizhzhya", "Chernihiv", "Crimea", "Sevastopol'")
+# Crimea was of course occupied starting in 2014 so we will treat it differently in our analysis
+
+ukraine@data  <- ukraine@data %>%
+  mutate(onborder = if_else(NAME_1 %in% c("Sumy", "Kharkiv", "Luhans'k", "Donets'k", "Zaporizhzhya", "Chernihiv", "Crimea", "Sevastopol'"), TRUE, FALSE))
+ukraine.df <- fortify(ukraine)
+ukraine@data$id <- rownames(ukraine@data)
+ukraine.df <- join(ukraine.df,ukraine@data, by="id")
+
+system.time(
+  plot(ggplot(ukraine.df)+
+         geom_polygon(aes(x=long, y=lat, group=group, fill=onborder), 
+                      color="grey20", size=0.15) +
+       coord_map() +
+         labs(title = "Region of Interest: Border with Russia"))
+)
+```
+
+```{r zoom-in}
+### this isn't working for some reason ###
+
+
+
+ukraine <- getData("GADM", country="UKR", level=2)
+ukraine@data  <- ukraine@data %>%
+  mutate(onborder = if_else(NAME_1 %in% c("Sumy", "Kharkiv", "Luhans'k", "Donets'k", "Zaporizhzhya", "Chernihiv", "Crimea", "Sevastopol'"), TRUE, FALSE))
+ukraine.df <- fortify(ukraine)
+ukraine@data$id <- rownames(ukraine@data)
+ukraine.df <- left_join(ukraine.df,ukraine@data, by="id")
+ukraine.df <- ukraine.df[ukraine.df$onborder == TRUE, ]
+
+system.time(
+  plot(ggplot(ukraine.df)+
+         geom_polygon(aes(x=long, y=lat, group=group, fill=onborder), 
+                      color="grey20", size=0.15) + coord_map() +
+         labs(title = "Region of Interest: Border with Russia"))
+)
+```
+
+
+
+
