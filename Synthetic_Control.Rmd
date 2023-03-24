@@ -1,0 +1,138 @@
+---
+title: "Uzbekistan Health Reforms: Synthetic Control Model (Uzbekistan)"
+author: Michelle Schultze
+output: pdf_document
+date: "2023-02-27"
+---
+
+```{r packages}
+#install.packages("readr", repos = "http://cran.us.r-project.org")
+#install.packages("microsynth", repos = "http://cran.us.r-project.org")
+#install.packages("LowRankQP", repos = "http://cran.us.r-project.org")
+#install.packages("tidyverse", repos = "http://cran.us.r-project.org")
+library("readr")
+library("haven")
+library("tidyverse")
+library("microsynth")
+library("LowRankQP")
+```
+
+```{r dataset}
+data_month <- read_csv("data_month_NL.csv")
+regGDP <- read_dta("Region by year GDP panel.dta")
+
+data_month$Date <- paste(data_month$year,data_month$month,"01", sep="-")
+data_month$Date <- as.Date(data_month$Date, format = "%Y-%m-%d")
+
+regGDP[regGDP$year == 2021, 3] <- NA 
+
+## code from class
+
+data_tidy_YR_test <- data_month |> group_by(year, reg, name) |> 
+  mutate(NLI = nl_sum_4/(area_sq_km - 0.141*nl_nodata_4),
+         NLI2 = nl_mean_4/nl_std_4)
+
+data_tidy_YR_test <- filter(data_tidy_YR_test, year >= 2012, !(reg %in% c("UA_09_O", "UA_14_O")) ) 
+
+# remove LNR/DNR {careful with character string "UA_09_0" vs. "UA_14_O"} 
+# original data_month starts in 2010 (with many missing variables)
+data_tidy_YR_test <- filter(data_tidy_YR_test, year >= 2012, !(reg %in% c("UA_09_O", "UA_14_O")) ) 
+
+# arrange order of columns for easier viewing
+data_tidy_YR_test <- data_tidy_YR_test |> 
+  select(c(year, month, reg, name, area_sq_km, NLI, NLI2, tw_count), everything())
+
+
+# Coding Question:
+# How do we compute logs of a select range of columns?
+test <- data_tidy_YR_test
+test$logNLI <- log(test$NLI)
+# What happens when we take log of negative values or zero? Are the outputs the same?
+# Check for -Inf and NaN
+# How do we identify this?
+# check is.na() function and is.infinite() function
+# What do we do about that once identified?
+# sum(is.na(test$logNLI))
+# sum(is.infinite(test$logNLI))
+# which(is.na(test$logNLI))
+# which(is.infinite(test$logNLI))
+
+data_tidy_YR_test <- data_tidy_YR_test |> 
+  mutate(across(c(NLI:tw_n_settlements), ~log(.x), .names = '{.col}'))
+
+data_tidy_YR_test[data_tidy_YR_test == -Inf] <- 0
+
+# Estimation Portion 2012-2020 (2021 we have monthly levels)
+data_tidy_YR <- filter(data_tidy_YR_test, year < 2021) |>
+  group_by(year, reg, name) |>
+  summarise(across(c(NLI:tw_n_settlements), ~mean(.x, na.rm=TRUE), .names = '{.col}')) |>
+  mutate(across(c(NLI:tw_n_settlements), ~round(.x, digits=3), .names = '{.col}'))
+
+# Add yearly levels of GDP
+data_tidy_YR <- left_join(data_tidy_YR, regGDP, by=c("year", "reg"))
+
+data_tidy_YR$GDP <- log(data_tidy_YR$GDP)
+colnames(data_tidy_YR)[25] <- "lng"
+
+
+GTI_reg_2012_23 <- read_csv("GTI_reg_2012_23.csv")
+GTI_reg_2012_23$Date <- as.Date(GTI_reg_2012_23$date, format = "%m/%d/%Y")
+GTI_yearly <- GTI_reg_2012_23
+GTI_yearly$year <- format(as.Date(GTI_yearly$date, format="%d/%m/%Y"),"%Y")
+GTI_yearly <- GTI_yearly %>% group_by(year, regcode) %>%
+  summarise(avg_Labor = mean(Labor), avg_Unemployment = mean(Unemployment), avg_Loan = mean(Loan), avg_Mercedes = mean(Mercedes)) %>%
+  mutate(reg = regcode)
+
+
+data_tidy_YR <- data_tidy_YR %>%
+  mutate(year = as.numeric(year))
+
+GTI_yearly <- GTI_yearly %>%
+  mutate(year = as.numeric(year)) 
+
+GTI_yearly$reg <- sub("-", "_", GTI_yearly$reg)
+
+data_tidy_FULL <- data_tidy_YR %>%
+  left_join(GTI_yearly, by = c("reg", "year"))
+
+
+# "Treatment" is whether or not the oblast is Donetsk/Luhansk/Crimea (UA_14, UA_09, UA_43)
+
+data_tidy_FULL <- data_tidy_FULL %>%
+  mutate(Intervention = if_else(reg %in% c("UA_14", "UA_09", "UA_43") & year > 2014, 1, 0))
+
+```
+
+```{r synthetic-control}
+# ID will be "reg" column
+# Time will be "year" column
+# Intervention variable created above
+# Intervention year = 2014
+# Data starts 2012, ends 2020 
+
+# Outcome vars will be c("avg_Labor", "avg_Unemployment", "avg_Loan", "avg_Mercedes")
+match.out.min <- c("nl_mean_4", "nl_sum_4", "lng")
+
+# Because we're not matching exactly, we will use match.out.min/match.out.covar rather than match.out/match.covar
+
+data_tidy_FULL_1 <- data_tidy_FULL %>%
+  drop_na()
+
+data_tidy_FULL_1['year'] = data_tidy_FULL_1['year'] - 2011
+
+# year 0 is 2011
+# year 3 is 2014
+# year 11 is 2020
+
+sea1 <- microsynth(data_tidy_FULL_1, idvar="reg", timevar="year", intvar="Intervention",
+             start.pre=1, end.pre=3, end.post=11,
+             match.out.min = match.out.min,
+             match.covar = FALSE,
+             result.var=match.out.min, omnibus.var=TRUE,
+             test="lower", use.survey = FALSE, 
+             perm=250, jack = 0, check.feas=TRUE, use.backup = TRUE,
+             n.cores = min(parallel::detectCores(), 2))
+summary(sea1)
+
+plot_microsynth(sea1)
+```
