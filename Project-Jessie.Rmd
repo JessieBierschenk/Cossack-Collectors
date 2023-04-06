@@ -48,56 +48,56 @@ NL_data=NL_data %>%
 
 In this new dataset, there will be repeated values that do not necessarily match up to the month. Any variable besides the NL information or the tw does not correspond to the given month.
 
-This project we will be focusing on the following regions: Zakarpatska, Ivano-Frankivska, Lvivska, Ternopilska, Chernivetska	
+This project we will be focusing on the following regions: Luhanska, Donetska, Chernihivska, Sumska, Kharkivska	
 
 
 # Area of Region
 
 An interesting aspect of each region to note before beginning analyses is the size. In order from largest region to smallest:
 
-1. Zakarpatska (33,347.50 sq km)
+1. Luhanska (33,347.50 sq km)
 
-2. Chernivetska (26,656.97 sq km)
+2. Kharkivska (26,656.97 sq km)
 
-3. Lvivska (25,558.45 sq km)
+3. Chernihivska (25,558.45 sq km)
 
-4. Ternopilska (24,015.76 sq km)
+4. Sumska (24,015.76 sq km)
 
-5. Ivano-Frankivska (57.44 sq km)
+5. Donetska (57.44 sq km)
 
 # Sum of NL
 
 ```{r}
-region_subset = subset(all_data, reg == "UA_21"|reg == "UA_26"|reg == "UA_46"|reg == "UA_61"|reg == "UA_77" )
+region_subset = subset(all_data, reg == "UA_09"|reg == "UA_14"|reg == "UA_74"|reg == "UA_59"|reg == "UA_63" )
 ```
 
 ```{r}
-graph1_data = subset(NL_data, reg == "UA_21"|reg == "UA_26"|reg == "UA_46"|reg == "UA_61"|reg == "UA_77" )
+graph1_data = subset(NL_data, reg == "UA_09"|reg == "UA_14"|reg == "UA_74"|reg == "UA_59"|reg == "UA_63" )
 graph1_data = drop_na(graph1_data)
 lum_overtime = ggplot(graph1_data, aes(x = Date, y= nl_sum_4, color=name))+ geom_point()+labs(title= "Sum of NL Brightness Values w/ Snow Adjustment", y="Sum of NL")+ guides(color = guide_legend(title = "Region"))
 
 lum_overtime
 ```
 
-Above shows the sum of night lights after adjusted for snow for each reason. There are clear regional differences with Ivano-Frankivska having the smallest on average sum and Zakarpatska having the largest. These numbers tend to make sense for the most part in terms if size of the region with Zakarpatska being the largest region and Ivano-Frankivska being the smallest. To get a better look at these sums, we will look at each region individually.
+Above shows the sum of night lights after adjusted for snow for each reason. There are clear regional differences with Donetska having the smallest on average sum and Luhanska having the largest. These numbers tend to make sense for the most part in terms if size of the region with Luhanska being the largest region and Donetska being the smallest. To get a better look at these sums, we will look at each region individually.
 
 ```{r}
-Zakarpatska_sum = ggplot( data = subset(graph1_data, reg == "UA_21"), aes(x = Date, y= nl_sum_4))+ geom_line()+labs(title= "Zakarpatska", y="Sum of NL")+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+Luhanska_sum = ggplot( data = subset(graph1_data, reg == "UA_09"), aes(x = Date, y= nl_sum_4))+ geom_line()+labs(title= "Luhanska", y="Sum of NL")+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
 
-IvanoFrankivska_sum = ggplot( data = subset(graph1_data, reg == "UA_26"), aes(x = Date, y= nl_sum_4))+ geom_line()+labs(title= "Ivano-Frankivska", y="Sum of NL")+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+Donetska_sum = ggplot( data = subset(graph1_data, reg == "UA_14"), aes(x = Date, y= nl_sum_4))+ geom_line()+labs(title= "Donetska", y="Sum of NL")+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
 
-Lvivska_sum = ggplot( data = subset(graph1_data, reg == "UA_46"), aes(x = Date, y= nl_sum_4))+ geom_line()+labs(title= "Lvivska", y="Sum of NL")+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+Chernihivska_sum = ggplot( data = subset(graph1_data, reg == "UA_74"), aes(x = Date, y= nl_sum_4))+ geom_line()+labs(title= "Chernihivska", y="Sum of NL")+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
 
-Ternopilska_sum = ggplot( data = subset(graph1_data, reg == "UA_61"), aes(x = Date, y= nl_sum_4))+ geom_line()+labs(title= "Ternopilska", y="Sum of NL")+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+Sumska_sum = ggplot( data = subset(graph1_data, reg == "UA_59"), aes(x = Date, y= nl_sum_4))+ geom_line()+labs(title= "Sumska", y="Sum of NL")+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
 
-Chernivetska_sum = ggplot( data = subset(graph1_data, reg == "UA_77"), aes(x = Date, y= nl_sum_4))+ geom_line()+labs(title= "Chernivetska", y="Sum of NL")+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+Kharkivska_sum = ggplot( data = subset(graph1_data, reg == "UA_63"), aes(x = Date, y= nl_sum_4))+ geom_line()+labs(title= "Kharkivska", y="Sum of NL")+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
 
-grid.arrange(Zakarpatska_sum,IvanoFrankivska_sum,Lvivska_sum,Ternopilska_sum,Chernivetska_sum, ncol=3, top = "Sum of NL Brightness Values w/ Snow Adjustment")
+grid.arrange(Luhanska_sum,Donetska_sum,Chernihivska_sum,Sumska_sum,Kharkivska_sum, ncol=3, top = "Sum of NL Brightness Values w/ Snow Adjustment")
 
   
 ```
 
-This visual provides a clearer view of trends over time by region. Zakarpatska, Ternopilska, and Chernivetska have similar trends over the course of the ten years. Both Ivano-Frankivska and Lvivska gradually increase over the ten years.
+This visual provides a clearer view of trends over time by region. Luhanska, Sumska, and Kharkivska have similar trends over the course of the ten years. Both Donetska and Chernihivska gradually increase over the ten years.
 
 # Median NL
 
@@ -115,26 +115,26 @@ med_lum_overtime
 
 ```
 
-This graph provides an interesting insight as Ivano-Frankivska showed the smallest sum of night lights in the previous visual, yet has the highest median NL values here. This trend is consistent with mean NL data. We will observe these trends on a regional basis below to better understand variations.
+This graph provides an interesting insight as Donetska showed the smallest sum of night lights in the previous visual, yet has the highest median NL values here. This trend is consistent with mean NL data. We will observe these trends on a regional basis below to better understand variations.
 
 
 ```{r}
-Zakarpatska_sum = ggplot( data = subset(graph1_data, reg == "UA_21"), aes(x = Date, y= nl_median_4))+ geom_line()+labs(title= "Zakarpatska", y="Median NL")+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+Luhanska_sum = ggplot( data = subset(graph1_data, reg == "UA_09"), aes(x = Date, y= nl_median_4))+ geom_line()+labs(title= "Luhanska", y="Median NL")+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
 
-IvanoFrankivska_sum = ggplot( data = subset(graph1_data, reg == "UA_26"), aes(x = Date, y= nl_median_4))+ geom_line()+labs(title= "Ivano-Frankivska", y="Median NL")+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+Donetska_sum = ggplot( data = subset(graph1_data, reg == "UA_14"), aes(x = Date, y= nl_median_4))+ geom_line()+labs(title= "Donetska", y="Median NL")+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
 
-Lvivska_sum = ggplot( data = subset(graph1_data, reg == "UA_46"), aes(x = Date, y= nl_median_4))+ geom_line()+labs(title= "Lvivska", y="Median NL")+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+Chernihivska_sum = ggplot( data = subset(graph1_data, reg == "UA_74"), aes(x = Date, y= nl_median_4))+ geom_line()+labs(title= "Chernihivska", y="Median NL")+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
 
-Ternopilska_sum = ggplot( data = subset(graph1_data, reg == "UA_61"), aes(x = Date, y= nl_median_4))+ geom_line()+labs(title= "Ternopilska", y="Median NL")+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+Sumska_sum = ggplot( data = subset(graph1_data, reg == "UA_59"), aes(x = Date, y= nl_median_4))+ geom_line()+labs(title= "Sumska", y="Median NL")+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
 
-Chernivetska_sum = ggplot( data = subset(graph1_data, reg == "UA_77"), aes(x = Date, y= nl_median_4))+ geom_line()+labs(title= "Chernivetska", y="Median NL")+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+Kharkivska_sum = ggplot( data = subset(graph1_data, reg == "UA_63"), aes(x = Date, y= nl_median_4))+ geom_line()+labs(title= "Kharkivska", y="Median NL")+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
 
-grid.arrange(Zakarpatska_sum,IvanoFrankivska_sum,Lvivska_sum,Ternopilska_sum,Chernivetska_sum, ncol=3, top = "Median NL Brightness Values w/ Snow Adjustment")
+grid.arrange(Luhanska_sum,Donetska_sum,Chernihivska_sum,Sumska_sum,Kharkivska_sum, ncol=3, top = "Median NL Brightness Values w/ Snow Adjustment")
 
   
 ```
 
-Zakarpatska, Ternopilska, Ivano-Frankivska, Chernivetska, and Lvivska all show similar trends with many occurences of median of zero. Ivano-Frankivska has a unique trend of increasing over time and barely having any occurrences of zero.
+Luhanska, Sumska, Donetska, Kharkivska, and Chernihivska all show similar trends with many occurences of median of zero. Donetska has a unique trend of increasing over time and barely having any occurrences of zero.
 
 
 # Look at Median Sum NL per year compared to Labor Index
@@ -142,7 +142,7 @@ Zakarpatska, Ternopilska, Ivano-Frankivska, Chernivetska, and Lvivska all show s
 agreggated_data = aggregate(cbind(nl_count_0,nl_count_4, nl_min_0, nl_min_4, nl_max_4, nl_mean_4, nl_sum_4, nl_nodata_4, nl_std_4, nl_median_4, nl_max_0, nl_mean_0, nl_sum_0, nl_nodata_0, nl_std_0, nl_median_0, tw_count, tw_n_settlements ) ~year+ reg+name+ area_sq_km, NL_data, FUN = median)
 join_aggregate = left_join(agreggated_data, GT_NL_data, by = c("year"="year", "reg"="reg", "name"="name"))
 join_aggregate = left_join(join_aggregate, GDP_data, by = c("year"="year", "reg"="reg"))
-subset_join_agg = subset(join_aggregate, reg == "UA_21"|reg == "UA_26"|reg == "UA_46"|reg == "UA_61"|reg == "UA_77" )
+subset_join_agg = subset(join_aggregate, reg == "UA_09"|reg == "UA_14"|reg == "UA_74"|reg == "UA_59"|reg == "UA_63" )
 # here I am combining the data by condensing the Night Light data by taking the median of each value by year
 ```
 
@@ -169,26 +169,26 @@ Here we have a visual of the relaionship between the median number of tweets in 
 
 # Log median tweets and median sum of night lights in a year
 ```{r}
-Zakarpatska_tweets= ggplot( data = subset(graph1_data, reg == "UA_21"))+ geom_line(aes(x = Date, y= scale(nl_sum_4)))+ geom_line(aes(x = Date, y= scale(tw_count), color="Med # Tweets"))+labs(title= "Zakarpatska", y="Sum of NL")+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))+guides(color = guide_legend(title = "Legend"))
+Luhanska_tweets= ggplot( data = subset(graph1_data, reg == "UA_09"))+ geom_line(aes(x = Date, y= scale(nl_sum_4)))+ geom_line(aes(x = Date, y= scale(tw_count), color="Med # Tweets"))+labs(title= "Luhanska", y="Sum of NL")+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))+guides(color = guide_legend(title = "Legend"))
 
-IvanoFrankivska_tweets = ggplot( data = subset(graph1_data, reg == "UA_26"), aes(x = Date, y= nl_sum_4))+ geom_line(aes(x = Date, y= scale(nl_sum_4)))+ geom_line(aes(x = Date, y= scale(tw_count), color="Med # Tweets"))+labs(title= "Ivano-Frankivska", y="Sum of NL")+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))+guides(color = guide_legend(title = "Legend"))
+Donetska_tweets = ggplot( data = subset(graph1_data, reg == "UA_14"), aes(x = Date, y= nl_sum_4))+ geom_line(aes(x = Date, y= scale(nl_sum_4)))+ geom_line(aes(x = Date, y= scale(tw_count), color="Med # Tweets"))+labs(title= "Donetska", y="Sum of NL")+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))+guides(color = guide_legend(title = "Legend"))
 
-Lvivska_tweets = ggplot( data = subset(graph1_data, reg == "UA_46"), aes(x = Date, y= nl_sum_4))+ geom_line(aes(x = Date, y= scale(nl_sum_4)))+ geom_line(aes(x = Date, y= scale(tw_count), color="Med # Tweets"))+labs(title= "Lvivska", y="Sum of NL")+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))+guides(color = guide_legend(title = "Legend"))
+Chernihivska_tweets = ggplot( data = subset(graph1_data, reg == "UA_74"), aes(x = Date, y= nl_sum_4))+ geom_line(aes(x = Date, y= scale(nl_sum_4)))+ geom_line(aes(x = Date, y= scale(tw_count), color="Med # Tweets"))+labs(title= "Chernihivska", y="Sum of NL")+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))+guides(color = guide_legend(title = "Legend"))
 
-Ternopilska_tweets = ggplot( data = subset(graph1_data, reg == "UA_61"), aes(x = Date, y= nl_sum_4))+ geom_line(aes(x = Date, y= scale(nl_sum_4)))+ geom_line(aes(x = Date, y= scale(tw_count), color="Med # Tweets"))+labs(title= "Ternopilska", y="Sum of NL")+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))+guides(color = guide_legend(title = "Legend"))
+Sumska_tweets = ggplot( data = subset(graph1_data, reg == "UA_59"), aes(x = Date, y= nl_sum_4))+ geom_line(aes(x = Date, y= scale(nl_sum_4)))+ geom_line(aes(x = Date, y= scale(tw_count), color="Med # Tweets"))+labs(title= "Sumska", y="Sum of NL")+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))+guides(color = guide_legend(title = "Legend"))
 
-Chernivetska_tweets = ggplot( data = subset(graph1_data, reg == "UA_77"), aes(x = Date, y= nl_sum_4))+ geom_line(aes(x = Date, y= scale(nl_sum_4)))+ geom_line(aes(x = Date, y= scale(tw_count), color="Med # Tweets"))+labs(title= "Chernivetska", y="Sum of NL")+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))+guides(color = guide_legend(title = "Legend"))
+Kharkivska_tweets = ggplot( data = subset(graph1_data, reg == "UA_63"), aes(x = Date, y= nl_sum_4))+ geom_line(aes(x = Date, y= scale(nl_sum_4)))+ geom_line(aes(x = Date, y= scale(tw_count), color="Med # Tweets"))+labs(title= "Kharkivska", y="Sum of NL")+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))+guides(color = guide_legend(title = "Legend"))
 
-#grid.arrange(Zakarpatska_tweets,Ivano-Frankivska_tweets,Lvivska_tweets,Ternopilska_tweets,Chernivetska_tweets, ncol=2, top = "Sum of NL Brightness Values w/ Snow Adjustment")
-Zakarpatska_tweets
-IvanoFrankivska_tweets
-Lvivska_tweets
-Ternopilska_tweets
-Chernivetska_tweets
+#grid.arrange(Luhanska_tweets,Donetska_tweets,Chernihivska_tweets,Sumska_tweets,Kharkivska_tweets, ncol=2, top = "Sum of NL Brightness Values w/ Snow Adjustment")
+Luhanska_tweets
+Donetska_tweets
+Chernihivska_tweets
+Sumska_tweets
+Kharkivska_tweets
   
 ```
 
-For these visualizations, I have scaled two values(median tweets and median sum of night lights in a year) in order to better understand the relationship between the two. For Regions like Zakarpatska, Lvivska, and Ivano-Frankivska, there appears to be an inverse relationship with median tweets and median sum of night lights in a year. For Ternopilska and Chernivetska, there is not as clear of relationship.
+For these visualizations, I have scaled two values(median tweets and median sum of night lights in a year) in order to better understand the relationship between the two. For Regions like Luhanska, Chernihivska, and Donetska, there appears to be an inverse relationship with median tweets and median sum of night lights in a year. For Sumska and Kharkivska, there is not as clear of relationship.
 
 # Twitter vs. GDP
 
@@ -226,22 +226,22 @@ GDP_histo1
 
 
 ```{r}
-Zakarpatska_GDP_tweets= ggplot( data = subset(subset_join_agg, reg == "UA_21"))+ geom_line(aes(x = year, y= scale(GDP)))+ geom_line(aes(x = year, y= scale(tw_count), color="Med # Tweets"))+labs(title= "Zakarpatska", y=" ")+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))+guides(color = guide_legend(title = "Legend"))
+Luhanska_GDP_tweets= ggplot( data = subset(subset_join_agg, reg == "UA_09"))+ geom_line(aes(x = year, y= scale(GDP)))+ geom_line(aes(x = year, y= scale(tw_count), color="Med # Tweets"))+labs(title= "Luhanska", y=" ")+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))+guides(color = guide_legend(title = "Legend"))
 
-Ternopilska_GDP_tweets = ggplot( data = subset(subset_join_agg, reg == "UA_61"), aes(x = year, y= GDP))+ geom_line(aes(x = year, y= scale(GDP)))+ geom_line(aes(x = year, y= scale(tw_count), color="Med # Tweets"))+labs(title= "Ternopilska", y=" ")+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))+guides(color = guide_legend(title = "Legend"))
+Sumska_GDP_tweets = ggplot( data = subset(subset_join_agg, reg == "UA_59"), aes(x = year, y= GDP))+ geom_line(aes(x = year, y= scale(GDP)))+ geom_line(aes(x = year, y= scale(tw_count), color="Med # Tweets"))+labs(title= "Sumska", y=" ")+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))+guides(color = guide_legend(title = "Legend"))
 
-Chernivetska_GDP_tweets = ggplot( data = subset(subset_join_agg, reg == "UA_77"), aes(x = year, y= GDP))+ geom_line(aes(x = year, y= scale(GDP)))+ geom_line(aes(x = year, y= scale(tw_count), color="Med # Tweets"))+labs(title= "Chernivetska", y=" ")+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))+guides(color = guide_legend(title = "Legend"))
+Kharkivska_GDP_tweets = ggplot( data = subset(subset_join_agg, reg == "UA_63"), aes(x = year, y= GDP))+ geom_line(aes(x = year, y= scale(GDP)))+ geom_line(aes(x = year, y= scale(tw_count), color="Med # Tweets"))+labs(title= "Kharkivska", y=" ")+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))+guides(color = guide_legend(title = "Legend"))
 
-IvanoFrankivska_GDP_tweets = ggplot( data = subset(subset_join_agg, reg == "UA_26"), aes(x = year, y= GDP))+ geom_line(aes(x = year, y= scale(GDP)))+ geom_line(aes(x = year, y= scale(tw_count), color="Med # Tweets"))+labs(title= "Ivano-Frankivska", y=" ")+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))+guides(color = guide_legend(title = "Legend"))
+Donetska_GDP_tweets = ggplot( data = subset(subset_join_agg, reg == "UA_14"), aes(x = year, y= GDP))+ geom_line(aes(x = year, y= scale(GDP)))+ geom_line(aes(x = year, y= scale(tw_count), color="Med # Tweets"))+labs(title= "Donetska", y=" ")+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))+guides(color = guide_legend(title = "Legend"))
 
-Lvivska_GDP_tweets = ggplot( data = subset(subset_join_agg, reg == "UA_46"), aes(x = year, y= GDP))+ geom_line(aes(x = year, y= scale(GDP)))+ geom_line(aes(x = year, y= scale(tw_count), color="Med # Tweets"))+labs(title= "Lvivska", y=" ")+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))+guides(color = guide_legend(title = "Legend"))
+Chernihivska_GDP_tweets = ggplot( data = subset(subset_join_agg, reg == "UA_74"), aes(x = year, y= GDP))+ geom_line(aes(x = year, y= scale(GDP)))+ geom_line(aes(x = year, y= scale(tw_count), color="Med # Tweets"))+labs(title= "Chernihivska", y=" ")+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))+guides(color = guide_legend(title = "Legend"))
 
-grid.arrange(Zakarpatska_GDP_tweets, Ternopilska_GDP_tweets, Chernivetska_GDP_tweets,IvanoFrankivska_GDP_tweets, Lvivska_GDP_tweets, ncol=2, top = "GDP vs. Median # Tweets")
+grid.arrange(Luhanska_GDP_tweets, Sumska_GDP_tweets, Kharkivska_GDP_tweets,Donetska_GDP_tweets, Chernihivska_GDP_tweets, ncol=2, top = "GDP vs. Median # Tweets")
 
   
 ```
 
-There is a lot of missingness in data for GDP for Ivano-Frankivska and Lvivska, so these regions were not included in this visualization. Above is the scaled values of Median number of tweets in a year and GDP of the year. A scaled value is used in order to better visualize this relationship.
+There is a lot of missingness in data for GDP for Donetska and Chernihivska, so these regions were not included in this visualization. Above is the scaled values of Median number of tweets in a year and GDP of the year. A scaled value is used in order to better visualize this relationship.
 
 
 # Tweets vs. Emigration Index
@@ -257,17 +257,17 @@ emig_comp_tweets
 There is positive relationship with the emigration index and number of tweets and clear trend differences by region.
 
 ```{r}
-Zakarpatska_Em_tweet = ggplot( data = subset(subset_join_agg, reg == "UA_21"), aes(x = Emigration_index, y= tw_count))+ geom_line()+labs(title= "Zakarpatska", y="Median # Tweets", x = "Emigration Index")+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+Luhanska_Em_tweet = ggplot( data = subset(subset_join_agg, reg == "UA_09"), aes(x = Emigration_index, y= tw_count))+ geom_line()+labs(title= "Luhanska", y="Median # Tweets", x = "Emigration Index")+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
 
-IvanoFrankivska_Em_tweet = ggplot( data = subset(subset_join_agg, reg == "UA_26"), aes(x = Emigration_index, y= tw_count))+ geom_line()+labs(title= "Ivano-Frankivska", y="Median # Tweets", x = "Emigration Index")+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+Donetska_Em_tweet = ggplot( data = subset(subset_join_agg, reg == "UA_14"), aes(x = Emigration_index, y= tw_count))+ geom_line()+labs(title= "Donetska", y="Median # Tweets", x = "Emigration Index")+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
 
-Lvivska_Em_tweet = ggplot( data = subset(subset_join_agg, reg == "UA_46"), aes(x = Emigration_index, y= tw_count))+ geom_line()+labs(title= "Lvivska", y="Median # Tweets", x = "Emigration Index")+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+Chernihivska_Em_tweet = ggplot( data = subset(subset_join_agg, reg == "UA_74"), aes(x = Emigration_index, y= tw_count))+ geom_line()+labs(title= "Chernihivska", y="Median # Tweets", x = "Emigration Index")+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
 
-Ternopilska_Em_tweet = ggplot( data = subset(subset_join_agg, reg == "UA_61"), aes(x = Emigration_index, y= tw_count))+ geom_line()+labs(title= "Ternopilska", y="Median # Tweets", x = "Emigration Index")+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+Sumska_Em_tweet = ggplot( data = subset(subset_join_agg, reg == "UA_59"), aes(x = Emigration_index, y= tw_count))+ geom_line()+labs(title= "Sumska", y="Median # Tweets", x = "Emigration Index")+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
 
-Chernivetska_Em_tweet = ggplot( data = subset(subset_join_agg, reg == "UA_77"), aes(x = Emigration_index, y= tw_count))+ geom_line()+labs(title= "Chernivetska", y="Median # Tweets", x = "Emigration Index")+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+Kharkivska_Em_tweet = ggplot( data = subset(subset_join_agg, reg == "UA_63"), aes(x = Emigration_index, y= tw_count))+ geom_line()+labs(title= "Kharkivska", y="Median # Tweets", x = "Emigration Index")+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
 
-grid.arrange(Zakarpatska_Em_tweet,IvanoFrankivska_Em_tweet,Lvivska_Em_tweet,Ternopilska_Em_tweet,Chernivetska_Em_tweet, ncol=3, top = "Median number number of tweets in year vs. Emigraiton index")
+grid.arrange(Luhanska_Em_tweet,Donetska_Em_tweet,Chernihivska_Em_tweet,Sumska_Em_tweet,Kharkivska_Em_tweet, ncol=3, top = "Median number number of tweets in year vs. Emigraiton index")
 
   
   
@@ -308,7 +308,7 @@ tidy(NL_lm_mod)
 
 For the difference-difference analysis, we will do the total change in GDP from the previous year.
 ```{r}
-subset_join_agg_1  = subset(subset_join_agg, reg == "UA_46")
+subset_join_agg_1  = subset(subset_join_agg, reg == "UA_74")
 subset_join_agg_1 = subset_join_agg_1 %>% 
   arrange(year) 
 subset_join_agg_1 = subset_join_agg_1 %>% 
@@ -318,8 +318,8 @@ subset_join_agg_1 = subset_join_agg_1 %>%
 ```
 
 ```{r}
-#U_40 Ivano-Frankivska
-subset_join_agg_2  = subset(subset_join_agg, reg == "UA_26")
+#U_40 Donetska
+subset_join_agg_2  = subset(subset_join_agg, reg == "UA_14")
 GDP_diff = c(diff(subset_join_agg_2$GDP))
 numbers = as.data.frame(GDP_diff)
 numbers = numbers %>% 
@@ -328,8 +328,8 @@ numbers$year = as.numeric(numbers$year)
 try2 = merge(numbers, subset_join_agg_2, by.x = "year", by.y = "year")
 
 
-#U_43 Lvivska
-subset_join_agg_1  = subset(subset_join_agg, reg == "UA_46")
+#U_43 Chernihivska
+subset_join_agg_1  = subset(subset_join_agg, reg == "UA_74")
 GDP_diff = c(diff(subset_join_agg_1$GDP))
 numbers = as.data.frame(GDP_diff)
 numbers = numbers %>% 
@@ -338,8 +338,8 @@ numbers$year = as.numeric(numbers$year)
 try1 = merge(numbers, subset_join_agg_1, by.x = "year", by.y = "year")
 
 
-#U_48 Ternopilska
-subset_join_agg_3  = subset(subset_join_agg, reg == "UA_61")
+#U_48 Sumska
+subset_join_agg_3  = subset(subset_join_agg, reg == "UA_59")
 GDP_diff = c(diff(subset_join_agg_3$GDP))
 numbers = as.data.frame(GDP_diff)
 numbers = numbers %>% 
@@ -347,8 +347,8 @@ numbers = numbers %>%
 numbers$year = as.numeric(numbers$year)
 try3 = merge(numbers, subset_join_agg_3, by.x = "year", by.y = "year")
 
-#U_51 Zakarpatska
-subset_join_agg_4  = subset(subset_join_agg, reg == "UA_21")
+#U_51 Luhanska
+subset_join_agg_4  = subset(subset_join_agg, reg == "UA_09")
 GDP_diff = c(diff(subset_join_agg_4$GDP))
 numbers = as.data.frame(GDP_diff)
 numbers = numbers %>% 
@@ -357,8 +357,8 @@ numbers$year = as.numeric(numbers$year)
 try4 = merge(numbers, subset_join_agg_4, by.x = "year", by.y = "year")
 
 
-#U_65 Chernivetska
-subset_join_agg_5  = subset(subset_join_agg, reg == "UA_77")
+#U_65 Kharkivska
+subset_join_agg_5  = subset(subset_join_agg, reg == "UA_63")
 GDP_diff = c(diff(subset_join_agg_5$GDP))
 numbers = as.data.frame(GDP_diff)
 numbers = numbers %>% 
@@ -422,8 +422,8 @@ tidy(new_model2)
 *Significant in Level-Level Model (alpha = 0.1)*
 
 * Intercept
-* Lvivska
-* Zakarpatska
+* Chernihivska
+* Luhanska
 * 2013
 * 2019
 * Emigration Index
@@ -443,20 +443,42 @@ tidy(new_model2)
 
 * 2014
 * 2015
-* Lvivska
+* Chernihivska
 * MBA Degree Index
 * Emigration Index
 
 ```{r}
-# 
-# subset_join_agg_try = subset_join_agg %>%
-#     group_by(reg) %>%
-#     arrange(year, .by_group = TRUE) %>%
-#     mutate(diff_year = year - lag(year))
-# 
-# 
-# try = subset_join_agg %>%
-#     group_by(reg) %>%
-#     mutate(diff = GDP - lag(GDP, order_by = year))
+set.seed(123)  # for reproducibility
+x <- seq(from = 0, to = 2 * pi, length = 500)
+y <- sin(x) + rnorm(length(x), sd = 0.3)
+df <- data.frame(x, y) %>%
+  filter(x < 4.5)
+
+# Single model fit; Kolmogorov test, qqplot
+bias_model <- lm(y ~ I(x^3), data = df)
+df$predictions <- predict(bias_model, df)
+p1 <- ggplot(df, aes(x, y)) +
+  geom_point(alpha = .3) +
+  geom_line(aes(x, predictions), linewidth = 1.5, color = "dodgerblue") +
+  scale_y_continuous("Response", limits = c(-1.75, 1.75), expand = c(0, 0)) +
+  scale_x_continuous(limits = c(0, 4.5), expand = c(0, 0)) +
+  ggtitle("Single biased model fit")
+
+p1
+```
+```{r}
+# Bootstrapped model fit
+bootstrap_n <- 25
+bootstrap_results <- NULL
+for(i in seq_len(bootstrap_n)) {
+  set.seed(i)  # for reproducibility
+  index <- sample(seq_len(nrow(df)), nrow(df), replace = TRUE)
+  df_sim <- df[index, ]
+  fit <- lm(y ~ I(x^3), data = df_sim)
+  df_sim$predictions <- predict(fit, df_sim)
+  df_sim$model <- paste0("model", i)
+  df_sim$ob <- index
+  bootstrap_results <- rbind(bootstrap_results, df_sim)
+}
 ```
 
