@@ -162,6 +162,7 @@ for (i in 1:length(gt_regions)){
 #, ,  , , , 'Import',, , 'Patent', 'work.ua'
 ```
 
+
 ```{r}
 # Make giant data set
 Moldova_Trends_Data = rbind(data1, data2, data3, data4)
