@@ -8,7 +8,7 @@ output:
     df_print: paged
 ---
 
-Load packages & import data
+Load packages & import data 
 
 ```{r load-import, message=FALSE, warning=FALSE}
 library(tidyverse)
@@ -25,6 +25,7 @@ library(sf)
 library(terra)
 library(plyr) 
 library(geodata)
+library(rgeos)
 ```
 
 ```{r map-0, message=FALSE, warning=FALSE, include=FALSE}
@@ -47,16 +48,11 @@ ggplot() +
     ggtitle("Moldova") +
     theme(panel.background =element_rect(fill = 'blue'))
 
-
+ 
 
 ```
 
 ```{r map-orig}
-library(sf)
-library(ggplot2)
-library(rgdal)
-library(rgeos)
-
 #Reading the shapefiles
 sf <- st_read(dsn="/Users/michelle/econ390/project-git/map resources/gadm41_MDA_1.shp")
 shape <- readOGR(dsn="/Users/michelle/econ390/project-git/map resources/gadm41_MDA_1.shp")
@@ -74,6 +70,19 @@ sf <- sf %>%
 
 ggplot() + 
   geom_sf(data = sf, aes(fill = ofinterest)) + theme_bw()
+
+
+
+sf <- sf %>%
+  mutate(Region = case_when(NAME_1 %in% c("Bălţi", "Bender", "Chişinău") ~ "Cities of Interest", 
+                                NAME_1 %in% "Transnistria" ~ "Transnistria",
+                                NAME_1 %in% c("Briceni", "Donduseni", "Drochia", "Edineţ", "Făleşti", "Floreşti", "Glodeni", "Ocniţa", "Rîşcani", "Sîngerei", "Soroca") ~ "Northern Region",
+                            NAME_1 %in% c("Anenii Noi", "Calarasi", "Criuleni", "Dubăsari", "Hîncesti", "Ialoveni", "Nisporeni", "Orhei", "Rezina", "Şoldăneşti", "Străşeni", "Teleneşti", "Ungheni") ~ "Central Region",
+                            NAME_1 %in% c("Basarabeasca", "Cahul", "Cantemir", "Causeni", "Cimişlia", "Leova", "Ştefan Voda", "Taraclia", "Găgăuzia") ~ "Southern Region")) 
+
+         
+ggplot() + 
+  geom_sf(data = sf, aes(fill = Region)) + theme_bw()
 
 ```
 
