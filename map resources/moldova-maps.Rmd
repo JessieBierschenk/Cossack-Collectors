@@ -8,7 +8,7 @@ output:
     df_print: paged
 ---
 
-Load packages & import data
+Load packages & import data 
 
 ```{r load-import, message=FALSE, warning=FALSE}
 library(tidyverse)
@@ -47,7 +47,7 @@ ggplot() +
     ggtitle("Moldova") +
     theme(panel.background =element_rect(fill = 'blue'))
 
-
+ 
 
 ```
 
