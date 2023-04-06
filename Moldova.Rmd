@@ -177,6 +177,7 @@ Moldova_Trends_Data = distinct(Moldova_Trends_Data)
 ```{r}
 write.csv(Moldova_Trends_Data, file = "/Users/jessiebierschenk/Cossack Collectors/Moldova_Trends_Data.csv", row.names=FALSE)
 
+view(Moldova_Trends_Data)
 ```
 
 
