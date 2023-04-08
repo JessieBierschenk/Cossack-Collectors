@@ -161,3 +161,24 @@ for (i in 1:length(gt_regions)){
 #, ,, ,, '/m/02640pc',  , '/m/05sq5', '/g/11clfj__ql'
 #, ,  , , , 'Import',, , 'Patent', 'work.ua'
 ```
+
+
+```{r}
+# Make giant data set
+Moldova_Trends_Data = rbind(data1, data2, data3, data4)
+Moldova_Trends_Data = distinct(Moldova_Trends_Data)
+
+# change the <1 to 0s
+ Moldova_Trends_Data <- data.frame(lapply(Moldova_Trends_Data, function(x) {
+                  gsub("<1", "0.5", x)
+              }))
+```
+
+```{r}
+write.csv(Moldova_Trends_Data, file = "/Users/jessiebierschenk/Cossack Collectors/Moldova_Trends_Data.csv", row.names=FALSE)
+
+view(Moldova_Trends_Data)
+```
+
+
+
