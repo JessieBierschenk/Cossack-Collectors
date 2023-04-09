@@ -1,0 +1,108 @@
+---
+title: "Econ 390 Moldova maps"
+author: "Michelle Schultze"
+date: "2023-03-23"
+output:
+  word_document: default
+  html_document:
+    df_print: paged
+---
+
+
+Load packages & import data 
+
+```{r load-import, message=FALSE, warning=FALSE}
+library(readxl)
+UNHCR <- read_excel("UNHCR 2022 Multi-Sector Needs Assessment Consolidated Dataset.xlsx", 
+    sheet = "family-level_data")
+UA_codes <- read_excel("converting_UA_codes.xlsx")
+
+library(tidyverse)
+library(broom)
+library(tidymodels)
+library(ggplot2)
+library(ggthemes)
+library(pls)
+library(haven)
+library(maps)
+library(rgdal)
+library(maptools)
+library(sf)
+library(terra)
+library(geodata)
+library(rgeos)
+library(plyr)
+library(dplyr)
+```
+
+```{r EDA}
+UNHCR %>%
+  ggplot(mapping = aes(today)) +
+  geom_bar() +
+  labs(title = "Timespan", subtitle = "UNHCR Multi-Sector Needs Assessment")
+
+UNHCR %>%
+  ggplot(mapping = aes(today)) +
+  geom_bar() +
+  labs(title = "Timespan by Region", subtitle = "UNHCR Multi-Sector Needs Assessment") + 
+  facet_wrap(admin1 ~ .)
+
+UNHCR %>%
+  ggplot(mapping = aes(hh_accomodation)) +
+  geom_bar() +
+  labs(title = "Accomodations of Surveyed Refugees", subtitle = "UNHCR Multi-Sector Needs Assessment (May 16-May 31 2022)")
+
+UNHCR %>%
+  ggplot(mapping = aes(admin_oblast)) +
+  geom_bar() +
+  labs(title = "Accomodations of Surveyed Refugees", subtitle = "UNHCR Multi-Sector Needs Assessment (May 16-May 31 2022)") 
+
+
+
+
+
+##displacement_intentions 
+#displacement_return
+#hh_family_size
+#language_preference 
+#arrival 
+#admin_oblast
+```
+
+
+** work in progress, for some reason I couldn't get the group_by to work :(( **
+
+```{r map-orig}
+ukraine <- gadm36_UKR_1_sp
+
+ukraine@data$NAME_1
+ukraine.df <- fortify(ukraine)
+
+ukraine@data <- ukraine@data %>%
+  join(UA_codes, by = "NAME_1") %>%
+  mutate(admin_oblast = No_Dash)
+
+test <- UNHCR %>%
+  group_by(admin_oblast) %>%
+  summarize(n = sum())
+
+
+
+
+ukraine@data %>%
+  join(UNHCR, by = )
+
+ukraine@data  <- ukraine@data %>%
+  mutate(onborder = if_else(NAME_1 %in% c("Sumy", "Kharkiv", "Luhans'k", "Donets'k", "Zaporizhzhya", "Chernihiv", "Crimea", "Sevastopol'"), TRUE, FALSE))
+
+ukraine@data$id <- rownames(ukraine@data)
+ukraine.df <- join(ukraine.df,ukraine@data, by="id")
+
+system.time(
+  plot(ggplot(ukraine.df)+
+         geom_polygon(aes(x=long, y=lat, group=group, fill=onborder), 
+                      color="grey20", size=0.15) +
+       coord_map() +
+         labs(title = "Regions Covered by this Dataset"))
+)
+```
