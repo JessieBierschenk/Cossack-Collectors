@@ -1,6 +1,8 @@
 ---
 title: "Moldova Exploration"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
 date: "2023-03-29"
 ---
 ```{r}
@@ -177,8 +179,82 @@ Moldova_Trends_Data = distinct(Moldova_Trends_Data)
 ```{r}
 write.csv(Moldova_Trends_Data, file = "/Users/jessiebierschenk/Cossack Collectors/Moldova_Trends_Data.csv", row.names=FALSE)
 
-view(Moldova_Trends_Data)
+#view(Moldova_Trends_Data)
+Moldova_Trends_Data= Moldova_Trends_Data %>% 
+  mutate(name = ifelse(geo == 'MD-BA', "Balti", ifelse( geo == 'MD-BD', "Bender", ifelse(geo== "MD-CU", "Chisinau", "Transnistria"))))
+
+Moldova_Trends_Data$date = as.Date(Moldova_Trends_Data$date)
+Moldova_Trends_Data$hits = as.numeric(Moldova_Trends_Data$hits)
+
+Moldova_Trends_Data$year = substr(Moldova_Trends_Data$date, 1, 4)
+
 ```
 
 
+```{r}
+Most_Hits =Moldova_Trends_Data %>% 
+  group_by(name) %>%
+  top_n(1, hits)
 
+tibble(Most_Hits)
+```
+The max hits were the following topics:
+
+* For Balti: Labor (2011)
+
+* For Bender: Washing Machine (2010), McDonalds (2013)
+
+* For Chisinau: Travel (2021)
+
+* For Transnistria: Apple (2010)
+
+
+# Travel Hits
+
+```{r}
+Travel_hits = ggplot(subset(Moldova_Trends_Data, keyword =='Travel'), aes(x = date, y= hits))+ geom_line(aes(color=name))+labs(title= "Travel Hits Overtime by Region", y="# Hits", x= "Date") +guides(color = guide_legend(title = "Region"))
+
+Travel_hits
+```
+
+# Unemployment Hits
+
+```{r}
+Unemployment_hits = ggplot(subset(Moldova_Trends_Data, keyword =='Unemployment'), aes(x = date, y= hits))+ geom_line(aes(color=name))+labs(title= "Unemployment Hits Overtime by Region", y="# Hits", x= "Date") +guides(color = guide_legend(title = "Region"))
+
+Unemployment_hits
+```
+
+
+# McDonalds Hits
+
+```{r}
+McDonalds_hits = ggplot(subset(Moldova_Trends_Data, keyword =='McDonalds'), aes(x = date, y= hits))+ geom_line(aes(color=name))+labs(title= "McDonalds Hits Overtime by Region", y="# Hits", x= "Date") +guides(color = guide_legend(title = "Region"))
+
+McDonalds_hits
+```
+
+# Apple Hits
+
+```{r}
+Apple_hits = ggplot(subset(Moldova_Trends_Data, keyword =='apple'), aes(x = date, y= hits))+ geom_line(aes(color=name))+labs(title= "Apple Hits Overtime by Region", y="# Hits", x= "Date") +guides(color = guide_legend(title = "Region"))
+
+Apple_hits
+
+```
+
+# Fitness Hits
+
+```{r}
+Fitness_hits = ggplot(subset(Moldova_Trends_Data, keyword =='Fitness'), aes(x = date, y= hits))+ geom_line(aes(color=name))+labs(title= "Fitness Hits Overtime by Region", y="# Hits", x= "Date") +guides(color = guide_legend(title = "Region"))
+Fitness_hits
+
+```
+
+# Mortgage Loan Hits
+
+```{r}
+Mortgage_loan_hits = ggplot(subset(Moldova_Trends_Data, keyword =='Mortgage_loan'), aes(x = date, y= hits))+ geom_line(aes(color=name))+labs(title= "Mortgage Loan  Hits Overtime by Region", y="# Hits", x= "Date") +guides(color = guide_legend(title = "Region"))
+Mortgage_loan_hits
+
+```
