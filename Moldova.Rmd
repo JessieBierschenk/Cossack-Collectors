@@ -166,9 +166,9 @@ for (i in 1:length(gt_regions)){
 
 ```{r}
 gt_time <- '2010-01-01 2023-01-31'
-gt_regions <- c('MD-CA')
-gt_topic_codes <- c( '/m/015gxd', '/g/121mknrx', '/m/07bsy', '/m/04n7dpf', '/m/0h6dlrc', '/m/0h5wpdf', '/m/032tl', '/m/0273t5w', '/m/03w7y7','/m/07gyp7', '/m/0k8z', '/m/027x7n', '/m/014dsx', '/m/03gkl', '/g/122h6md7', '/m/07s_c','/m/01dnzs', '/m/0174k2', '/m/040b_t')
-gt_topic_names <- c('Emigration',  'Construction', 'Transport', 'Interest_rate', 'BMW', 'Mercedes', 'Fashion', 'Mortgage_loan', 'Baggage','McDonalds', 'apple','Fitness', 'Travel', 'Holiday', 'Labor', 'Unemployment', 'Loan', 'Washing_machine', 'Fridge')
+gt_regions <- c('MD-DU', "MD-CT")
+gt_topic_codes <- c( '/g/121mknrx', '/m/07bsy')
+gt_topic_names <- c('Construction', 'Transport' )
 gt_waiting_time <- 30
 
 # create an empty dataframe to store all datasets
@@ -185,6 +185,41 @@ for (i in 1:length(gt_regions)){
   }
 }
 
+#, 
+#, 
+
+ #, , '/m/032tl', '/m/0273t5w', '/m/03w7y7','/m/07gyp7', '/m/0k8z', '/m/027x7n', '/m/014dsx', '/m/03gkl', '/g/122h6md7', '/m/07s_c','/m/01dnzs', '/m/0174k2', '/m/040b_t', '/m/015gxd'
+
+#,  , 'Fashion', 'Mortgage_loan', 'Baggage','McDonalds', 'apple','Fitness', 'Travel', 'Holiday', 'Labor', 'Unemployment', 'Loan', 'Washing_machine', 'Fridge', 'Emigration'
+```
+
+```{r}
+gt_time <- '2010-01-01 2023-01-31'
+gt_regions <- c('MD-SV')
+gt_topic_codes <- c('/m/032tl' )
+gt_topic_names <- c('Fashion')
+gt_waiting_time <- 30
+
+# create an empty dataframe to store all datasets
+data_more1 <- data.frame(matrix(ncol = 7, nrow = 0))
+
+# use for loop to scrape data 
+for (i in 1:length(gt_regions)){
+  for (j in 1:length(gt_topic_codes)){
+    temp <- gtrends(gt_topic_codes[j], geo = gt_regions[i], time = gt_time)
+    temp <- temp[["interest_over_time"]]
+    temp["keyword"][temp["keyword"] == gt_topic_codes[j]] =  gt_topic_names[j]
+    data_more1 <- rbind(data_more1, temp)
+    Sys.sleep(gt_waiting_time)
+  }
+}
+
+#, ,'/m/0273t5w',
+#, , ,'Mortgage_loan',
+
+ #, , , , , , , ,, ', , '/m/015gxd'
+
+#,  , ,, , , , , , , , 'Emigration'
 ```
 
 
@@ -284,6 +319,47 @@ Mortgage_loan_hits
 
 
 ```{r}
+MD_data = read.csv( "Moldova Country Data.csv")
+MD_data = subset(MD_data, select = -c(Country.Name,Country.Code, Indicator.Code) )
+MD_data = MD_data%>%
+  pivot_longer(cols=c('X2010', 'X2011', 'X2012', 'X2013', 'X2014', 'X2015', 'X2016', 'X2017', 'X2018', 'X2019', 'X2020', 'X2021'), names_to='year', values_to = 'Value')
+
+MD_data$year<-gsub("X","",as.character(MD_data$year))
+MD_data$year = as.numeric(MD_data$year)
+```
+
+```{r}
+ggplot(data = subset(MD_data, Indicator.Name == "Food exports (% of merchandise exports)")) + geom_line(aes(x = year, y = Value)) + labs(title = "Food exports (% of merchandise exports) vs. Year", x = "Year", y = "Food Exports")
 
 ```
+```{r}
+ggplot(data = subset(MD_data, Indicator.Name == "Fuel imports (% of merchandise imports)")) + geom_line(aes(x = year, y = Value)) + labs(title = "Fuel imports (% of merchandise imports) vs. Year", x = "Year", y = "Fuel imports")
+```
+```{r}
+ggplot(data = subset(MD_data, Indicator.Name == "International tourism, expenditures for travel items (current US$)")) + geom_line(aes(x = year, y = Value)) + labs(title = "International tourism, expenditures for travel items (current US$) vs. Year", x = "Year", y = "International tourism")
+```
+```{r}
+ggplot(data = subset(MD_data, Indicator.Name == "Rural population (% of total population)")) + geom_line(aes(x = year, y = Value)) + labs(title = "Rural population (% of total population) vs. Year", x = "Year", y = "Rural Population %")
+```
+```{r}
+ggplot(data = subset(MD_data, Indicator.Name == "Population, female")) + geom_line(aes(x = year, y = Value)) + labs(title = "Population, female vs. Year", x = "Year", y = "Female Population")
+```
+```{r}
+ggplot(data = subset(MD_data, Indicator.Name == "Population growth (annual %)")) + geom_line(aes(x = year, y = Value)) + labs(title = "Population growth (annual %)", x = "Year", y = "Population growth (annual %) Vs. Year") + geom_hline(yintercept = 0, linetype="dashed", color = "red")
+```
+```{r}
+MD_education = MD_data %>% 
+  filter(Indicator.Name == "Educational attainment, at least completed short-cycle tertiary, population 25+, male (%) (cumulative)" | Indicator.Name == "Educational attainment, at least Master's or equivalent, population 25+, female (%) (cumulative)")
+
+MD_education = MD_education %>% 
+  mutate(ifelse(Indicator.Name == "Educational attainment, at least completed short-cycle tertiary, population 25+, male (%) (cumulative)", "Male", "Female"))
+
+MD_education = MD_education %>%
+  rename(Sort = 4)
+
+ggplot(data = MD_education) + geom_point(aes(x = year, y = Value, color = Sort)) + labs(title = "Educational attainment, at least completed short-cycle tertiary, 
+      population 25+ vs. Year", x = "Year", y = "Educational attainment, at least completed short-cycle tertiary, population 25+") 
+```
+
+
 
