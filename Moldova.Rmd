@@ -13,6 +13,7 @@ library(tibble)
 library(gridExtra)
 library(grid)
 library(lubridate)
+library(ggplot2)
 ```
 
 https://en.wikipedia.org/wiki/ISO_3166-2:MD
@@ -342,11 +343,27 @@ ggplot(data = subset(MD_data, Indicator.Name == "International tourism, expendit
 ggplot(data = subset(MD_data, Indicator.Name == "Rural population (% of total population)")) + geom_line(aes(x = year, y = Value)) + labs(title = "Rural population (% of total population) vs. Year", x = "Year", y = "Rural Population %")
 ```
 ```{r}
-ggplot(data = subset(MD_data, Indicator.Name == "Population, female")) + geom_line(aes(x = year, y = Value)) + labs(title = "Population, female vs. Year", x = "Year", y = "Female Population")
+ggplot(data = subset(MD_data, Indicator.Name == "Rural population growth (annual %)")) + geom_line(aes(x = year, y = Value)) + labs(title = "Rural population growth (annual %) vs. Year", x = "Year", y = "Rural Population Growth %")+ geom_hline(yintercept = 0, linetype="dashed", color = "red")
+```
+
+
+```{r}
+ggplot() + geom_line(data = subset(MD_data, Indicator.Name == "Population, female"), aes(x = year, y = Value, color ="Female")) + geom_line(data = subset(MD_data, Indicator.Name == "Population, male"), aes(x = year, y = Value, color = "Male"))+ labs(title = "Population vs. Year", x = "Year", y = "Population", color = "Gender")
 ```
 ```{r}
 ggplot(data = subset(MD_data, Indicator.Name == "Population growth (annual %)")) + geom_line(aes(x = year, y = Value)) + labs(title = "Population growth (annual %)", x = "Year", y = "Population growth (annual %) Vs. Year") + geom_hline(yintercept = 0, linetype="dashed", color = "red")
 ```
+```{r}
+ggplot(data = subset(MD_data, Indicator.Name == "Population, total")) + geom_line(aes(x = year, y = Value)) + labs(title = "Total Population vs. Year", x = "Year", y = "Total Population")
+```
+```{r}
+ggplot(data = subset(MD_data, Indicator.Name == "Population ages 25-29, male (% of male population)")) + geom_line(aes(x = year, y = Value)) + labs(title = "Male Population 25-29 (%) vs. Year", x = "Year", y = "% Total Population")
+```
+```{r}
+ggplot(data = subset(MD_data, Indicator.Name == "Population ages 35-39, male (% of male population)")) + geom_line(aes(x = year, y = Value)) + labs(title = "Male Population 35-39 (%) vs. Year", x = "Year", y = "% Total Population")
+```
+
+
 ```{r}
 MD_education = MD_data %>% 
   filter(Indicator.Name == "Educational attainment, at least completed short-cycle tertiary, population 25+, male (%) (cumulative)" | Indicator.Name == "Educational attainment, at least Master's or equivalent, population 25+, female (%) (cumulative)")
@@ -360,6 +377,79 @@ MD_education = MD_education %>%
 ggplot(data = MD_education) + geom_point(aes(x = year, y = Value, color = Sort)) + labs(title = "Educational attainment, at least completed short-cycle tertiary, 
       population 25+ vs. Year", x = "Year", y = "Educational attainment, at least completed short-cycle tertiary, population 25+") 
 ```
+```{r}
+ggplot(data = subset(MD_data, Indicator.Name == "Portfolio equity, net inflows (BoP, current US$)")) + geom_line(aes(x = year, y = Value)) + labs(title = "Portfolio equity, net inflows (BoP, current US$)", x = "Year", y = "Portfolio equity (Current US$)")
+```
+```{r}
+ggplot(data = subset(MD_data, Indicator.Name == "Agricultural raw materials exports (% of merchandise exports)")) + geom_line(aes(x = year, y = Value)) + labs(title = "Agricultural raw materials exports (% of merchandise exports) vs. Year", x = "Year", y = "Exports (% of merchandise exports)")
+```
+
+```{r}
+ggplot(data = subset(MD_data, Indicator.Name == "Unemployment, male (% of male labor force) (modeled ILO estimate)")) + geom_line(aes(x = year, y = Value)) + labs(title = "Unemployment, male (% of male labor force) (modeled ILO estimate) vs. Year", x = "Year", y = "Male Unemployment (% of male labor force) ")
+```
+```{r}
+p = ggplot() + geom_line(data = subset(MD_data, Indicator.Name == "Urban population"), aes(x = year, y = Value, color = "Urban")) + geom_line( data = subset(MD_data, Indicator.Name == "Rural population"), aes( x = year, y = Value, color = "Rural")) + labs(title = "Rural & Urban Population vs. Year", x = "Year", y = "Population Total", color = "Population")
+
+p
+```
+```{r}
+ggplot(data = subset(MD_data, Indicator.Name == "GDP per capita (current US$)")) + geom_line(aes(x = year, y = Value)) + labs(title = "GDP per capita (current US$) vs. Year", x = "Year", y = "GDP per capita (current US$)")
+```
+```{r}
+ggplot(data = subset(MD_data, Indicator.Name == "GDP (current LCU)")) + geom_line(aes(x = year, y = Value)) + labs(title = "GDP (current LCU) vs. Year", x = "Year", y = "GDP (current LCU)")
+```
+```{r}
+ggplot(data = subset(MD_data, Indicator.Name == "Inflation, GDP deflator: linked series (annual %)")) + geom_line(aes(x = year, y = Value)) + labs(title = "Inflation, GDP deflator: linked series (annual %) vs. Year", x = "Year", y = "Inflation, GDP deflator: linked series (annual %)")
+```
+
+```{r}
+ggplot(data = subset(MD_data, Indicator.Name == "Gross capital formation (annual % growth)")) + geom_line(aes(x = year, y = Value)) + labs(title = "Gross capital formation (annual % growth) vs. Year", x = "Year", y = "Gross capital formation (annual % growth)")+ geom_hline(yintercept = 0, linetype="dashed", color = "red")
+```
+
+```{r}
+ggplot(data = subset(MD_data, Indicator.Name == "Military expenditure (% of GDP)")) + geom_line(aes(x = year, y = Value)) + labs(title = "Military expenditure (% of GDP) vs. Year", x = "Year", y = "Military expenditure (% of GDP)")
+```
+
+
+```{r}
+ggplot(data = subset(MD_data, Indicator.Name == "Military expenditure (current USD)")) + geom_line(aes(x = year, y = Value)) + labs(title = "Military expenditure (current USD) vs. Year", x = "Year", y = "Military expenditure (current USD)")
+```
+
+
+```{r}
+ggplot(data = subset(MD_data, Indicator.Name == "Unemployment, total (% of total labor force) (national estimate)")) + geom_line(aes(x = year, y = Value)) + labs(title = "Unemployment, total (% of total labor force) (national estimate) vs. Year", x = "Year", y = "Unemployment, total (% of total labor force)")
+```
+```{r}
+ggplot(data = subset(MD_data, Indicator.Name == "GNI (current US$)")) + geom_line(aes(x = year, y = Value)) + labs(title = "GNI (current US$) vs. Year", x = "Year", y = "GNI (current US$)")
+```
+
+```{r}
+ggplot(data = subset(MD_data, Indicator.Name == "GDP (constant 2015 US$)")) + geom_line(aes(x = year, y = Value)) + labs(title = "GDP (constant 2015 US$) vs. Year", x = "Year", y = "GDP (constant 2015 US$)")
+```
+```{r}
+ggplot(data = subset(MD_data, Indicator.Name == "Population in largest city")) + geom_line(aes(x = year, y = Value)) + labs(title = "Population in largest city vs. Year", x = "Year", y = "Population in largest city")
+```
+
+```{r}
+ggplot(data = subset(MD_data, Indicator.Name == "Net migration")) + geom_line(aes(x = year, y = Value, color = 'red')) + labs(title = "Net migration vs. Year", x = "Year", y = "Net migration")+ theme(legend.position = "none") 
+```
+
+```{r}
+ggplot(data = subset(MD_data, Indicator.Name == "Consumer price index (2010 = 100)")) + geom_line(aes(x = year, y = Value)) + labs(title = "Consumer price index (2010 = 100) vs. Year", x = "Year", y = "Consumer price index (2010 = 100)")
+```
+```{r}
+ggplot(data = subset(MD_data, Indicator.Name == "GDP (current US$)")) + geom_line(aes(x = year, y = Value)) + labs(title = "GDP (current US$) vs. Year", x = "Year", y = "GDP (current US$)")
+```
+```{r}
+ggplot(data = subset(MD_data, Indicator.Name == "Inflation, GDP deflator (annual %)")) + geom_line(aes(x = year, y = Value)) + labs(title = "Inflation, GDP deflator (annual %) vs. Year", x = "Year", y = "Inflation, GDP deflator (annual %)")
+```
+
+
+```{r}
+ NTL_data = read.csv( "~/Cossack Collectors/NTL/NTL_Moldova.csv")
+view(NTL_data)
+```
+
 
 
 
