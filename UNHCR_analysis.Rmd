@@ -31,9 +31,18 @@ library(sf)
 library(terra)
 library(geodata)
 library(rgeos)
-library(plyr)
 library(dplyr)
+library(plyr)
 ```
+
+```{r merge}
+test <- UA_codes %>%
+  mutate(admin_oblast = No_Dash)
+
+UNHCR <- test %>%
+  merge(UNHCR)
+```
+
 
 ```{r EDA}
 UNHCR %>%
@@ -50,24 +59,304 @@ UNHCR %>%
 UNHCR %>%
   ggplot(mapping = aes(hh_accomodation)) +
   geom_bar() +
-  labs(title = "Accomodations of Surveyed Refugees", subtitle = "UNHCR Multi-Sector Needs Assessment (May 16-May 31 2022)")
+  labs(title = "Accomodations of Surveyed Refugees", subtitle = "UNHCR Multi-Sector Needs Assessment (May 16-May 31 2022)") + 
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1))
 
 UNHCR %>%
-  ggplot(mapping = aes(admin_oblast)) +
+  ggplot(mapping = aes(NAME_1)) +
   geom_bar() +
-  labs(title = "Accomodations of Surveyed Refugees", subtitle = "UNHCR Multi-Sector Needs Assessment (May 16-May 31 2022)") 
+  labs(title = "Origin Oblasts of Surveyed Refugees", subtitle = "UNHCR Multi-Sector Needs Assessment (May 16-May 31 2022)") + 
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1))
+
+
+
+UNHCR %>%
+  ggplot(mapping = aes(displacement_return)) +
+  geom_bar() +
+  labs(title = "Return Conditions of Surveyed Refugees", subtitle = "UNHCR Multi-Sector Needs Assessment (May 16-May 31 2022)") + 
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1))
+
+
+UNHCR %>%
+  ggplot(mapping = aes(displacement_intentions)) +
+  geom_bar() +
+  labs(title = "Intentions of Surveyed Refugees", subtitle = "UNHCR Multi-Sector Needs Assessment (May 16-May 31 2022)") + 
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1))
+
+
+UNHCR %>%
+  ggplot(mapping = aes(hh_family_size)) +
+  geom_bar() +
+  labs(title = "Family Size of Surveyed Refugees", subtitle = "UNHCR Multi-Sector Needs Assessment (May 16-May 31 2022)") + 
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1))
+
+
+
+UNHCR %>%
+  ggplot(mapping = aes(as.Date(arrival))) +
+  geom_bar() +
+  labs(title = "Arrival Date of Surveyed Refugees", subtitle = "UNHCR Multi-Sector Needs Assessment (May 16-May 31 2022)") + 
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1))
+
+
+
+UNHCR %>%
+  arrange(as.numeric(income_humanitarian_assistance), decreasing = FALSE) %>%
+  ggplot(mapping = aes(income_humanitarian_assistance)) +
+  geom_bar() +
+  labs(title = "Income by Means of Humanitarian Assistance", subtitle = "UNHCR Multi-Sector Needs Assessment (May 16-May 31 2022)") + 
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1))
 
 
 
 
+UNHCR %>%
+  ggplot(mapping = aes(hh_psychosocial_support)) +
+  geom_bar() +
+  labs(title = "Psychosocial Support Frequency", subtitle = "UNHCR Multi-Sector Needs Assessment (May 16-May 31 2022)") + 
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1))
 
-##displacement_intentions 
-#displacement_return
-#hh_family_size
-#language_preference 
-#arrival 
-#admin_oblast
+
+
+UNHCR %>%
+  ggplot(mapping = aes(hh_discrimination_md)) +
+  geom_bar() +
+  labs(title = "Discrimination Reported", subtitle = "UNHCR Multi-Sector Needs Assessment (May 16-May 31 2022)") + 
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1))
+
+
+UNHCR %>%
+  filter(displacement_second_country != "N/A") %>%
+  ggplot(mapping = aes(displacement_second_country)) +
+  geom_bar() +
+  labs(title = "Second Country Intentions", subtitle = "If intending to move to a second country other than Moldova") + 
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1))
+
+
 ```
+
+
+```{r sum-stats}
+UNHCR <- UNHCR %>%
+  mutate(
+    rac_dummy = if_else(rac_non_rac == "rac" | hh_accomodation == "acc_informal_rac", 1, 0),
+    relatives_dummy = case_when(hh_accomodation == "acc_relatives" ~ 1,
+                             hh_accomodation != "acc_relatives" ~ 0),
+    private_dummy = case_when(hh_accomodation == "acc_private" ~ 1,
+                             hh_accomodation != "acc_private" ~ 0),
+    hotel_dummy = case_when(hh_accomodation == "acc_hotel" ~ 1,
+                             hh_accomodation != "acc_hotel" ~ 0),
+    moldovan_dummy = case_when(hh_accomodation == "acc_moldovan" ~ 1,
+                             hh_accomodation != "acc_moldovan" ~ 0)) %>%
+  mutate(age_speaker = as.numeric(age_speaker),
+         income_formal_work = as.numeric(income_formal_work),
+         income_daily_labor = as.numeric(income_daily_labor),
+         income_business = as.numeric(income_business),
+         income_savings = as.numeric(income_savings),
+         income_government = as.numeric(income_government),
+         income_remittances = as.numeric(income_remittances),
+         income_support_family = as.numeric(income_support_family),
+         income_humanitarian_assistance = as.numeric(income_humanitarian_assistance),
+         income_donations = as.numeric(income_donations),
+         income_other = as.numeric(income_other),
+         hh_total_count = as.numeric(hh_total_count),
+         children_count = as.numeric(children_count),
+         expenses_family = as.numeric(expenses_family),
+         expenses_food = as.numeric(expenses_food),
+         expenses_rent = as.numeric(expenses_rent),
+         expenses_water = as.numeric(expenses_water),
+         expenses_nonfood = as.numeric(expenses_nonfood),
+         expenses_utilities = as.numeric(expenses_utilities),
+         expenses_fuel = as.numeric(expenses_fuel),
+         expenses_transport = as.numeric(expenses_transport),
+         expenses_communication = as.numeric(expenses_communication),
+         expenses_other = as.numeric(expenses_other))
+
+UNHCR["income_formal_work"][UNHCR["income_formal_work"] == "N/A"] <- 0
+UNHCR["income_daily_labor"][UNHCR["income_daily_labor"] == "N/A"] <- 0
+UNHCR["income_business"][UNHCR["income_business"] == "N/A"] <- 0
+UNHCR["income_savings"][UNHCR["income_savings"] == "N/A"] <- 0
+UNHCR["income_government"][UNHCR["income_government"] == "N/A"] <- 0
+UNHCR["income_remittances"][UNHCR["income_remittances"] == "N/A"] <- 0
+UNHCR["income_support_family"][UNHCR["income_support_family"] == "N/A"] <- 0
+UNHCR["income_humanitarian_assistance"][UNHCR["income_humanitarian_assistance"] == "N/A"] <- 0
+UNHCR["income_donations"][UNHCR["income_donations"] == "N/A"] <- 0
+UNHCR["income_other"][UNHCR["income_other"] == "N/A"] <- 0
+UNHCR["expenses_family"][UNHCR["expenses_family"] == "N/A"] <- 0
+UNHCR["expenses_food"][UNHCR["expenses_food"] == "N/A"] <- 0
+UNHCR["expenses_rent"][UNHCR["expenses_rent"] == "N/A"] <- 0
+UNHCR["expenses_water"][UNHCR["expenses_water"] == "N/A"] <- 0
+UNHCR["expenses_nonfood"][UNHCR["expenses_nonfood"] == "N/A"] <- 0
+UNHCR["expenses_utilities"][UNHCR["expenses_utilities"] == "N/A"] <- 0
+UNHCR["expenses_fuel"][UNHCR["expenses_fuel"] == "N/A"] <- 0
+UNHCR["expenses_transport"][UNHCR["expenses_transport"] == "N/A"] <- 0
+UNHCR["expenses_communication"][UNHCR["expenses_communication"] == "N/A"] <- 0
+UNHCR["expenses_other"][UNHCR["expenses_other"] == "N/A"] <- 0
+
+
+
+UNHCR %>%
+  group_by(hh_accomodation) %>%
+  dplyr::summarize(n = n(),
+                   freq = n()/704) %>%
+  filter(n > 10)
+
+
+
+
+UNHCR %>%
+  filter(hoh_probing_qs == "yes") %>%
+  group_by(displacement_intentions) %>%
+  dplyr::summarize(
+    russian_pref_freq = mean(language_preference_russian, na.rm=T),
+    avg_arrival = mean(ymd(arrival), na.rm=T),
+    avg_age = mean(age_speaker, na.rm=T),
+    rac_freq = mean(rac_dummy, na.rm=T),
+    private_freq = mean(private_dummy, na.rm=T),
+    hotel_freq = mean(hotel_dummy, na.rm=T),
+    relatives_freq = mean(relatives_dummy, na.rm=T),
+    moldovan_freq = mean(moldovan_dummy, na.rm=T),
+    avg_hh_total = mean(hh_total_count, na.rm=T),
+    avg_children = mean(children_count, na.rm=T),
+    avg_income_formal_work = mean(income_formal_work, na.rm=T),
+    avg_income_daily_labor = mean(income_daily_labor, na.rm=T),
+    avg_income_business = mean(income_business, na.rm=T),
+    avg_income_savings = mean(income_savings, na.rm=T),
+    avg_income_government = mean(income_government, na.rm=T),
+    avg_income_remittances = mean(income_remittances, na.rm=T),
+    avg_income_support_family = mean(income_support_family, na.rm=T),
+    avg_income_humanitarian_assistance = mean(income_humanitarian_assistance, na.rm=T),
+    avg_income_donations = mean(income_donations, na.rm=T),
+    avg_income_other = mean(income_other, na.rm=T),
+    avg_expenses_food = mean(expenses_food, na.rm=T),
+    avg_expenses_family = mean(expenses_family, na.rm=T),
+    avg_expenses_rent = mean(expenses_rent, na.rm=T),
+    avg_expenses_water = mean(expenses_water, na.rm=T),
+    avg_expenses_utilities = mean(expenses_utilities, na.rm=T),
+    avg_expenses_nonfood = mean(expenses_nonfood, na.rm=T),
+    avg_expenses_fuel = mean(expenses_fuel, na.rm=T),
+    avg_expenses_transport = mean(expenses_transport, na.rm=T),
+    avg_expenses_communication = mean(expenses_communication, na.rm=T),
+    avg_expenses_other = mean(expenses_other, na.rm=T),
+    n = n()
+    ) %>%
+  filter(n >10)
+
+# On average, heads of household who intend to eventually move to a secondary country after Moldova are younger, slightly less likely to prefer the Russian language, and arrived in Moldova later. They are also more likely to have a larger family with more children, draw more of their income from their savings, and receive less humanitarian assistance.
+# Also, 44% of households who intend to move to a secondary country live in RACs (Refugee Accommodation Centers), compared to 19-27% of those who intend to return, stay, or don't know.
+
+# Households who are uncertain about their intentions for leaving or staying in Moldova are most likely to live in hotels (32%) or RACs (27%).
+
+UNHCR %>%
+  group_by(displacement_intentions) %>%
+  dplyr::summarize(n = n(),
+                   freq = n()/704) %>%
+  filter(n > 10)
+
+# Most surveyed wanted to stay in Moldova.
+
+
+
+
+
+
+UNHCR %>%
+  filter(hoh_probing_qs == "yes") %>%
+  group_by(hh_accomodation) %>%
+  dplyr::summarize(
+    russian_pref_freq = mean(language_preference_russian, na.rm=T),
+    avg_arrival = mean(ymd(arrival), na.rm=T),
+    avg_age = mean(age_speaker, na.rm=T),
+    avg_hh_total = mean(hh_total_count, na.rm=T),
+    avg_children = mean(children_count, na.rm=T),
+    avg_income_formal_work = mean(income_formal_work, na.rm=T),
+    avg_income_daily_labor = mean(income_daily_labor, na.rm=T),
+    avg_income_business = mean(income_business, na.rm=T),
+    avg_income_savings = mean(income_savings, na.rm=T),
+    avg_income_government = mean(income_government, na.rm=T),
+    avg_income_remittances = mean(income_remittances, na.rm=T),
+    avg_income_support_family = mean(income_support_family, na.rm=T),
+    avg_income_humanitarian_assistance = mean(income_humanitarian_assistance, na.rm=T),
+    avg_income_donations = mean(income_donations, na.rm=T),
+    avg_income_other = mean(income_other, na.rm=T),
+    avg_expenses_food = mean(expenses_food, na.rm=T),
+    avg_expenses_family = mean(expenses_family, na.rm=T),
+    avg_expenses_rent = mean(expenses_rent, na.rm=T),
+    avg_expenses_water = mean(expenses_water, na.rm=T),
+    avg_expenses_utilities = mean(expenses_utilities, na.rm=T),
+    avg_expenses_nonfood = mean(expenses_nonfood, na.rm=T),
+    avg_expenses_fuel = mean(expenses_fuel, na.rm=T),
+    avg_expenses_transport = mean(expenses_transport, na.rm=T),
+    avg_expenses_communication = mean(expenses_communication, na.rm=T),
+    avg_expenses_other = mean(expenses_other, na.rm=T),
+    n = n()
+    ) %>%
+  filter(n >10)
+
+# On average, those living with Moldovans or relatives have less children and smaller family sizes.
+# On average, those living in hotels tend to draw the most from their savings (and then humanitarian assistance) as opposed to other forms of income, such as formal work. They also pay the most for rent by far (3000 per month on average).
+# Ukrainians living in formal or informal RACs in Moldova tend to have the lowest food and utilities expenditures on average, relative to those living in other accommodations.
+# Those living with relatives or in RACs pay the lowest amount of rent relative to those living in other accommodations. 
+# Those living with relatives or Moldovans pay the most for transport per month.
+
+
+
+test <- UNHCR %>%
+  filter(hoh_probing_qs == "yes") %>%
+  group_by(NAME_1) %>%
+  dplyr::summarize(
+    russian_pref_freq = mean(language_preference_russian, na.rm=T),
+    avg_arrival = mean(ymd(arrival), na.rm=T),
+    avg_age = mean(age_speaker, na.rm=T),
+    rac_freq = mean(rac_dummy, na.rm=T),
+    private_freq = mean(private_dummy, na.rm=T),
+    hotel_freq = mean(hotel_dummy, na.rm=T),
+    relatives_freq = mean(relatives_dummy, na.rm=T),
+    moldovan_freq = mean(moldovan_dummy, na.rm=T),
+    avg_hh_total = mean(hh_total_count, na.rm=T),
+    avg_children = mean(children_count, na.rm=T),
+    avg_income_formal_work = mean(income_formal_work, na.rm=T),
+    avg_income_daily_labor = mean(income_daily_labor, na.rm=T),
+    avg_income_business = mean(income_business, na.rm=T),
+    avg_income_savings = mean(income_savings, na.rm=T),
+    avg_income_government = mean(income_government, na.rm=T),
+    avg_income_remittances = mean(income_remittances, na.rm=T),
+    avg_income_support_family = mean(income_support_family, na.rm=T),
+    avg_income_humanitarian_assistance = mean(income_humanitarian_assistance, na.rm=T),
+    avg_income_donations = mean(income_donations, na.rm=T),
+    avg_income_other = mean(income_other, na.rm=T),
+    avg_expenses_food = mean(expenses_food, na.rm=T),
+    avg_expenses_family = mean(expenses_family, na.rm=T),
+    avg_expenses_rent = mean(expenses_rent, na.rm=T),
+    avg_expenses_water = mean(expenses_water, na.rm=T),
+    avg_expenses_utilities = mean(expenses_utilities, na.rm=T),
+    avg_expenses_nonfood = mean(expenses_nonfood, na.rm=T),
+    avg_expenses_fuel = mean(expenses_fuel, na.rm=T),
+    avg_expenses_transport = mean(expenses_transport, na.rm=T),
+    avg_expenses_communication = mean(expenses_communication, na.rm=T),
+    avg_expenses_other = mean(expenses_other, na.rm=T),
+    n = n()
+    ) %>%
+  filter(n >10)
+
+# Those coming from Donetsk and Kherson arrived in Moldova the latest on average.
+
+data_oblasts <- test %>%
+  select(NAME_1)
+
+UNHCR %>%
+  ggplot(aes(hh_accomodation)) +
+  geom_bar() +
+  facet_wrap(NAME_1 ~ .)
+
+
+
+```
+
+
+
+
+
 
 
 ** work in progress, for some reason I couldn't get the group_by to work :(( **
