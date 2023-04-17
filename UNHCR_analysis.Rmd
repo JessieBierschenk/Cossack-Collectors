@@ -33,6 +33,7 @@ library(geodata)
 library(rgeos)
 library(dplyr)
 library(plyr)
+library(ggridges)
 ```
 
 ```{r merge}
@@ -345,9 +346,229 @@ data_oblasts <- test %>%
   select(NAME_1)
 
 UNHCR %>%
-  ggplot(aes(hh_accomodation)) +
-  geom_bar() +
-  facet_wrap(NAME_1 ~ .)
+  filter(NAME_1 %in% c(data_oblasts$NAME_1)) %>%
+  ggplot(aes(NAME_1, fill=hh_accomodation)) +
+  geom_bar(position="fill", color="black") +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1))
+
+UNHCR %>%
+  filter(NAME_1 %in% c(data_oblasts$NAME_1)) %>%
+  ggplot(aes(NAME_1, hh_family_size)) +
+  geom_boxplot() +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1))
+
+UNHCR %>%
+  ggplot(aes(hh_accomodation, expenses_food)) +
+  geom_boxplot() +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1))
+
+UNHCR %>%
+  ggplot(aes(hh_accomodation, expenses_rent)) +
+  geom_boxplot() +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1))
+
+UNHCR %>%
+  filter(NAME_1 %in% c(data_oblasts$NAME_1)) %>%
+  ggplot(aes(NAME_1, fill=displacement_intentions)) +
+  geom_bar(position="fill", color="black") +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1))
+
+UNHCR %>%
+  filter(NAME_1 %in% c(data_oblasts$NAME_1)) %>%
+  mutate(goback = case_when(displacement_intentions == "Idntknow" | displacement_intentions == "no_response"~ "Unknown",
+                            displacement_intentions == "move_md" | displacement_intentions == "move_outmd" | displacement_intentions == "stay_location" | displacement_intentions == "stay_different" ~ "Not return to UA", 
+                            displacement_intentions == "return_ua_origin" | displacement_intentions == "return_ua_other"~ "Return to UA")) %>%
+  ggplot(aes(NAME_1, fill=goback)) +
+  geom_bar(position="fill", color="black") +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1))
+
+
+UNHCR %>%
+  filter(NAME_1 %in% c(data_oblasts$NAME_1)) %>%
+  mutate(goback = case_when(displacement_intentions == "Idntknow" | displacement_intentions == "no_response"~ "Unknown",
+                            displacement_intentions == "move_md" | displacement_intentions == "move_outmd" | displacement_intentions == "stay_location" | displacement_intentions == "stay_different" ~ "Not return to UA", 
+                            displacement_intentions == "return_ua_origin" | displacement_intentions == "return_ua_other"~ "Return to UA")) %>%
+  ggplot(aes(NAME_1, fill=goback)) +
+  geom_bar(position="fill", color="black") +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1))
+
+UNHCR %>%
+  filter(NAME_1 %in% c(data_oblasts$NAME_1)) %>%
+  ggplot(aes(NAME_1, fill=displacement_return)) +
+  geom_bar(position="fill", color="black") +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1))
+
+UNHCR %>%
+  ggplot(aes(as.numeric(expenses_food), as.numeric(children_count))) +
+  geom_point() +
+  geom_smooth(method="lm")+
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1))
+
+UNHCR %>%
+  filter(NAME_1 %in% c(data_oblasts$NAME_1)) %>%
+  mutate(goback = case_when(displacement_intentions == "Idntknow" | displacement_intentions == "no_response"~ "Unknown",
+                            displacement_intentions == "move_md" | displacement_intentions == "move_outmd" | displacement_intentions == "stay_location" | displacement_intentions == "stay_different" ~ "Not return to UA", 
+                            displacement_intentions == "return_ua_origin" | displacement_intentions == "return_ua_other"~ "Return to UA")) %>%
+  ggplot(aes(as.character(hh_total_count), fill=goback)) +
+  geom_bar(position="fill", color="black") +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1))
+
+
+
+
+
+
+
+UNHCR %>%
+  filter(hoh_probing_qs == "yes") %>%
+  group_by(as.character(children_count)) %>%
+  dplyr::summarize(
+    russian_pref_freq = mean(language_preference_russian, na.rm=T),
+    avg_arrival = mean(ymd(arrival), na.rm=T),
+    avg_age = mean(age_speaker, na.rm=T),
+    rac_freq = mean(rac_dummy, na.rm=T),
+    private_freq = mean(private_dummy, na.rm=T),
+    hotel_freq = mean(hotel_dummy, na.rm=T),
+    relatives_freq = mean(relatives_dummy, na.rm=T),
+    moldovan_freq = mean(moldovan_dummy, na.rm=T),
+    avg_children = mean(children_count, na.rm=T),
+    avg_income_formal_work = mean(income_formal_work, na.rm=T),
+    avg_income_daily_labor = mean(income_daily_labor, na.rm=T),
+    avg_income_business = mean(income_business, na.rm=T),
+    avg_income_savings = mean(income_savings, na.rm=T),
+    avg_income_government = mean(income_government, na.rm=T),
+    avg_income_remittances = mean(income_remittances, na.rm=T),
+    avg_income_support_family = mean(income_support_family, na.rm=T),
+    avg_income_humanitarian_assistance = mean(income_humanitarian_assistance, na.rm=T),
+    avg_income_donations = mean(income_donations, na.rm=T),
+    avg_income_other = mean(income_other, na.rm=T),
+    avg_expenses_food = mean(expenses_food, na.rm=T),
+    avg_expenses_family = mean(expenses_family, na.rm=T),
+    avg_expenses_rent = mean(expenses_rent, na.rm=T),
+    avg_expenses_water = mean(expenses_water, na.rm=T),
+    avg_expenses_utilities = mean(expenses_utilities, na.rm=T),
+    avg_expenses_nonfood = mean(expenses_nonfood, na.rm=T),
+    avg_expenses_fuel = mean(expenses_fuel, na.rm=T),
+    avg_expenses_transport = mean(expenses_transport, na.rm=T),
+    avg_expenses_communication = mean(expenses_communication, na.rm=T),
+    avg_expenses_other = mean(expenses_other, na.rm=T),
+    n = n()
+    ) %>%
+  filter(n >10)
+
+# Those with 0 kids are on average older and arrived later.
+# Seems to be a trend: living with relatives or Moldovans is more common if a household has less kids. Living in RACs is more common with more kids.
+
+
+UNHCR %>%
+  filter(NAME_1 %in% c(data_oblasts$NAME_1)) %>%
+  ggplot(aes(children_count, rac_dummy)) +
+  geom_point() +
+  geom_smooth(method = "lm")
+
+
+
+UNHCR %>%
+  filter(children_count < 5) %>%
+  ggplot() +
+  geom_point(aes(children_count, relatives_dummy)) +
+  geom_point(aes(children_count, rac_dummy)) +
+  geom_point(aes(children_count, moldovan_dummy)) +
+  geom_smooth(aes(children_count, relatives_dummy), method = "lm", color = "purple") +
+  geom_smooth(aes(children_count, rac_dummy), method = "lm", color = "red") +
+  geom_smooth(aes(children_count, moldovan_dummy), method = "lm", color = "blue")
+
+UNHCR %>%
+  ggplot() +
+  geom_point(aes(arrival, children_count), color = "red") +
+  geom_smooth(aes(arrival, children_count), method = "lm", color = "red") +
+  geom_point(aes(arrival, hh_total_count), color = "blue") +
+  geom_smooth(aes(arrival, hh_total_count), method = "lm", color = "blue")
+
+UNHCR %>%
+  mutate(infant = if_else(infant_hh == "yes", 1, 0)) %>%
+  ggplot(aes(arrival, infant)) +
+  geom_point() +
+  geom_smooth(method = "lm") 
+
+
+UNHCR %>%
+  ggplot(aes(hoh_occupation, children_count)) +
+  geom_boxplot() +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1))
+
+UNHCR %>%
+  filter(NAME_1 %in% c(data_oblasts$NAME_1)) %>%
+  ggplot(aes(NAME_1, fill=hoh_occupation)) +
+  geom_bar(position="fill", color="black") +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1))
+
+UNHCR %>%
+  filter(hh_accomodation != "acc_not_specified") %>%
+  ggplot(aes(hh_accomodation, fill=hoh_occupation)) +
+  geom_bar(position="fill", color="black") +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1))
+
+UNHCR %>%
+  filter(hh_accomodation != "acc_not_specified") %>%
+  ggplot(aes(hoh_occupation, fill=hh_accomodation)) +
+  geom_bar(position="fill", color="black") +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1))
+
+UNHCR %>%
+  filter(hoh_occupation != "no_answer") %>%
+  ggplot(aes(age_speaker, fill=hoh_occupation)) +
+  geom_bar(position="fill", color="black") +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1))
+
+UNHCR %>%
+  na.omit(age_speaker) %>% 
+  ggplot(aes(hoh_occupation, fill=as.character(age_speaker))) +
+  geom_bar(position="fill") +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1))
+
+
+
+UNHCR %>%
+  na.omit(age_speaker) %>% 
+  ggplot(aes(hoh_occupation, age_speaker)) +
+  geom_boxplot() +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1))
+
+
+
+UNHCR %>%
+  na.omit(age_speaker) %>% 
+  ggplot() +
+  geom_density_ridges2(aes(x = age_speaker, y = hoh_occupation)) +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1))
+
+  
+
+UNHCR %>%
+  na.omit(age_speaker) %>% 
+  ggplot() +
+  geom_density_ridges2(aes(x = children_count, y = hoh_occupation)) +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1))
+
+  
+UNHCR %>%
+  na.omit(age_speaker) %>% 
+  ggplot() +
+  geom_density_ridges2(aes(x = hh_total_count, y = hoh_occupation)) +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1))
+
+
+
+UNHCR %>%
+  mutate(goback = case_when(displacement_intentions == "Idntknow" | displacement_intentions == "no_response"~ "Unknown",
+                            displacement_intentions == "move_md" | displacement_intentions == "move_outmd" | displacement_intentions == "stay_location" | displacement_intentions == "stay_different" ~ "Not return to UA", 
+                            displacement_intentions == "return_ua_origin" | displacement_intentions == "return_ua_other"~ "Return to UA")) %>%
+  na.omit(age_speaker) %>% 
+  ggplot(aes(hoh_occupation, fill=goback)) +
+  geom_bar(position="fill", color="black") +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1))
+
 
 
 
