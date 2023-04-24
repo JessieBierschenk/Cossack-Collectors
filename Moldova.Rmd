@@ -283,6 +283,40 @@ for (i in 1:length(gt_regions)){
 #,  , ,, , , , , , , , 'Emigration'
 ```
 
+
+
+```{r}
+gt_time <- '2010-01-01 2023-01-31'
+gt_regions <- c('MD')
+gt_topic_codes <- c("/m/07s_c", "/m/0273t5w")
+gt_topic_names <- c( 'Unemployment' , 'Mortgage_Loan')
+gt_waiting_time <- 30
+
+# create an empty dataframe to store all datasets
+data_more3 <- data.frame(matrix(ncol = 7, nrow = 0))
+
+# use for loop to scrape data 
+for (i in 1:length(gt_regions)){
+  for (j in 1:length(gt_topic_codes)){
+    temp <- gtrends(gt_topic_codes[j], geo = gt_regions[i], time = gt_time)
+    temp <- temp[["interest_over_time"]]
+    temp["keyword"][temp["keyword"] == gt_topic_codes[j]] =  gt_topic_names[j]
+    data_more3 <- rbind(data_more3, temp)
+    Sys.sleep(gt_waiting_time)
+  }
+}
+
+#, ,, 
+#, 
+
+ #, , , , , , , ,, ', , '/m/015gxd'
+
+#,  , ,, , , , , , , , 'Emigration'
+```
+
+
+
+
 ```{r}
 # Make giant data set
 Moldova_Trends_Data = rbind(data1, data2, data3, data4, data_more1, data_more2,data_more3 )
@@ -623,5 +657,74 @@ view(NTL_data)
 ```
 
 
+```{r}
+library(tidyverse)
+
+# Helper packages
+library(dplyr)       # for data wrangling
+library(ggplot2)     # for awesome plotting
+
+#install.packages("caret")
+#install.packages("rpart.plot")
+#install.packages("vip")
+#install.packages("pdp")
+
+# Modeling packages
+library(rpart)       # direct engine for decision tree application
+#library(caret)       # meta engine for decision tree application
+
+# Model interpretability packages
+library(rpart.plot)  # for plotting decision trees
+library(vip)         # for feature importance
+library(pdp)         # for feature effects
+
+
+# create data
+set.seed(1112)  # for reproducibility
+df <- tibble::tibble(
+  x = seq(from = 0, to = 2 * pi, length = 500),
+  y = sin(x) + rnorm(length(x), sd = 0.5),
+  truth = sin(x)
+)
+
+# run decision stump model
+#ctrl <- list(cp = 0, minbucket = 5, maxdepth = 1)
+ctrl <- list(cp = 0, minbucket = 5, maxdepth = 7)
+fit <- rpart(y ~ x, data = df, control = ctrl)
+
+# plot tree 
+par(mar = c(1, 1, 1, 1))
+rpart.plot(fit)
+
+
+# plot decision boundary
+df %>%
+  mutate(pred = predict(fit, df)) %>%
+  ggplot(aes(x, y)) +
+  geom_point(alpha = .2, size = 1) +
+  geom_line(aes(x, y = truth), color = "blue", size = .75) +
+  geom_line(aes(y = pred), color = "red", size = .75) +
+  geom_segment(x = 3.1, xend = 3.1, y = -Inf, yend = -.95,
+               arrow = arrow(length = unit(0.25,"cm")), size = .25) +
+  annotate("text", x = 3.1, y = -Inf, label = "split", hjust = 1.2, vjust = -1, size = 3) +
+  geom_segment(x = 5.5, xend = 6, y = 2, yend = 2, size = .75, color = "blue") +
+  geom_segment(x = 5.5, xend = 6, y = 1.7, yend = 1.7, size = .75, color = "red") +
+  annotate("text", x = 5.3, y = 2, label = "truth", hjust = 1, size = 3, color = "blue") +
+  annotate("text", x = 5.3, y = 1.7, label = "decision boundary", hjust = 1, size = 3, color = "red")
+
+# fit depth 3 decision tree
+ctrl <- list(cp = 0, minbucket = 5, maxdepth = 3)
+fit <- rpart(y ~ x, data = df, control = ctrl)
+rpart.plot(fit)
+
+
+# plot decision boundary
+df %>%
+  mutate(pred = predict(fit, df)) %>%
+  ggplot(aes(x, y)) +
+  geom_point(alpha = .2, size = 1) +
+  geom_line(aes(x, y = truth), color = "blue", size = .75) +
+  geom_line(aes(y = pred), color = "red", size = .75)
+```
 
 

@@ -6,8 +6,7 @@ date: "2023-04-20"
 
 ```{r setup, include=FALSE}
 library(readxl)
-
-
+library(lubridate)
 library(tidyverse)
 library(broom)
 library(ggplot2)
@@ -45,24 +44,37 @@ UNHCR_clean$location[UNHCR_clean$admin1 == "falesti"] <- "Balti"
 
 UNHCR_clean$location[UNHCR_clean$admin1 == "dubarasi"] <- "Transnistria"
 
-UNHCR_clean$location[UNHCR_clean$admin1 == "annenni_noi"] <- "Bender"
-UNHCR_clean$location[UNHCR_clean$admin1 == "stefan_vodatabl"] <- "Bender"
+UNHCR_clean$location[UNHCR_clean$admin1 == "anenni_noi"] <- "Bender"
+UNHCR_clean$location[UNHCR_clean$admin1 == "stefan_voda"] <- "Bender"
 
 # subset based in columns of interest
-UNHCR_clean = subset(UNHCR_clean, select = c('location','admin1', "language_preference", "age_speaker", "arrival", "hh_accomodation", "admin_oblast", "displacement_secondary", "displacement_secondary_loc", "displacement_intentions", "displacement_return", "hh_family_size","gender", "age", "marital_status", "health_needed_healthcare", "wg_self_care", "pregnant_breastfeeding", "edu_enrollment", "household_number", "hoh_host_marital", "hoh_host_occupation_sector", "infant_hh", "hh_items_available", "hoh_education", "language_preference_need", "hoh_education_diploma", "hoh_occupation", "hoh_ocupation_sector", "hoh_ua_occupation_same", "hoh_current_occupation", "hoh_current_ocupation_sector", "csi_sold_assets", "csi_spent_savings", "csi_withdrew_children", "csi_sold_house" ))
+UNHCR_clean = subset(UNHCR_clean, select = c('location','admin1', "language_preference", "age_speaker","today", "arrival", "hh_accomodation", "admin_oblast", "displacement_secondary", "displacement_secondary_loc", "displacement_intentions", "displacement_return", "hh_family_size", "hh_priority_needs/healthcare", "hh_aid_preference/education_enrolment", "household_number", "hoh_host_marital",  "infant_hh", "hh_items_available", "hoh_education", "language_preference_need", "hoh_education_diploma", "hoh_occupation", "hoh_ocupation_sector", "hoh_ua_occupation_same", "hoh_current_occupation", "hoh_current_ocupation_sector", "csi_sold_assets", "csi_spent_savings", "csi_withdrew_children", "csi_sold_house", "income_formal_work", "income_daily_labor", "income_business", "income_savings", "income_government", "income_remittances", "income_support_family", "income_humanitarian_assistance", "income_donations", "expenses_food", "expenses_rent", "expenses_water", "expenses_nonfood", "expenses_utilities", "expenses_fuel", "expenses_transport", "expenses_communication", "expenses_modality", "hh_id_available", "hh_discrimination_md" ))
 
-table(UNHCR_clean$admin_oblast)
+UNHCR_clean$arrival = as.Date(UNHCR_clean$arrival)
+UNHCR_clean$today = as.Date(UNHCR_clean$today)
+UNHCR_clean$age_speaker = as.numeric(UNHCR_clean$age_speaker)
+
+#create month var
+UNHCR_clean$arrival_month = format(as.Date(UNHCR_clean$arrival, format="%Y-%m-%d"),"%m")
+UNHCR_clean$arrival_month = as.numeric(UNHCR_clean$arrival_month)
+UNHCR_clean$arrival_year = format(as.Date(UNHCR_clean$arrival, format="%Y-%m-%d"),"%Y")
+UNHCR_clean$arrival_year = as.numeric(UNHCR_clean$arrival_year)
+
+UNHCR_clean$today_month = format(as.Date(UNHCR_clean$today, format="%Y-%m-%d"),"%m")
+UNHCR_clean$today_month = as.numeric(UNHCR_clean$today_month)
+UNHCR_clean$today_year = format(as.Date(UNHCR_clean$today, format="%Y-%m-%d"),"%Y")
+UNHCR_clean$today_year = as.numeric(UNHCR_clean$today_year)
+
+#UNHCR_clean = transform(UNHCR_clean, diff_in_days = )
+UNHCR_clean$diff_in_days<- difftime(UNHCR_clean$today ,UNHCR_clean$arrival , units = c("days"))
+
+UNHCR_clean$date_lag = UNHCR_clean$arrival %m-% months(1) # Subtract 1 months
+UNHCR_clean$month_lag = format(as.Date(UNHCR_clean$date_lag, format="%Y-%m-%d"),"%m")
+UNHCR_clean$month_lag = as.numeric(UNHCR_clean$month_lag)
+
+
 
 ```
-
-
-```{r}
-#Trends Data
-trends_data = read.csv("Moldova_Trends_Data.csv")
-```
-
-
-
 
 
 
@@ -103,30 +115,6 @@ for (i in 1:length(gt_regions)){
 
 ```{r}
 gt_time <- '2018-01-01 2022-12-31'
-gt_regions <- c('MD-BA', 'MD-BD', 'MD-CU', 'MD-SN')
-gt_topic_codes <- c('/m/07gyp7', '/m/0k8z')
-gt_topic_names <- c(  'McDonalds', 'Apple')
-gt_waiting_time <- 30
-
-# create an empty dataframe to store all datasets
-Mdata2 <- data.frame(matrix(ncol = 7, nrow = 0))
-
-# use for loop to scrape data 
-for (i in 1:length(gt_regions)){
-  for (j in 1:length(gt_topic_codes)){
-    temp <- gtrends(gt_topic_codes[j], geo = gt_regions[i], time = gt_time)
-    temp <- temp[["interest_over_time"]]
-    temp["keyword"][temp["keyword"] == gt_topic_codes[j]] =  gt_topic_names[j]
-    Mdata2 <- rbind(Mdata2, temp)
-    Sys.sleep(gt_waiting_time)
-  }
-}
-
-```
-
-
-```{r}
-gt_time <- '2018-01-01 2022-12-31'
 gt_regions <- c('MD-BA', 'MD-BD', 'MD-CU', "MD-SN")
 gt_topic_codes <- c( '/m/0h6dlrc', '/m/0h5wpdf', '/m/032tl')
 gt_topic_names <- c( 'BMW', 'Mercedes', 'Fashion' )
@@ -149,220 +137,131 @@ for (i in 1:length(gt_regions)){
 ```
 
 
-```{r}
-gt_time <- '2018-01-01 2022-12-31'
-gt_regions <- c('MD-BA', 'MD-BD', 'MD-CU', "MD-SN")
-gt_topic_codes <- c( '/m/015gxd', '/g/121mknrx', '/m/07bsy')
-gt_topic_names <- c('Emigration',  'Construction', 'Transport')
-gt_waiting_time <- 30
-
-# create an empty dataframe to store all datasets
-data4 <- data.frame(matrix(ncol = 7, nrow = 0))
-
-# use for loop to scrape data 
-for (i in 1:length(gt_regions)){
-  for (j in 1:length(gt_topic_codes)){
-    temp <- gtrends(gt_topic_codes[j], geo = gt_regions[i], time = gt_time)
-    temp <- temp[["interest_over_time"]]
-    temp["keyword"][temp["keyword"] == gt_topic_codes[j]] =  gt_topic_names[j]
-    data4 <- rbind(data4, temp)
-    Sys.sleep(gt_waiting_time)
-  }
-}
-
-
-
-#   ,  '/m/01y857'
-#  ,, , 'Rent'
-
-
-#, ,, ,, '/m/02640pc',  , '/m/05sq5', '/g/11clfj__ql'
-#, ,  , , , 'Import',, , 'Patent', 'work.ua'
-```
-
-```{r}
-gt_time <- '2018-01-01 2022-12-31'
-gt_regions <- c('MD-DU', "MD-CT")
-gt_topic_codes <- c( '/g/121mknrx', '/m/07bsy')
-gt_topic_names <- c('Construction', 'Transport' )
-gt_waiting_time <- 30
-
-# create an empty dataframe to store all datasets
-data_more <- data.frame(matrix(ncol = 7, nrow = 0))
-
-# use for loop to scrape data 
-for (i in 1:length(gt_regions)){
-  for (j in 1:length(gt_topic_codes)){
-    temp <- gtrends(gt_topic_codes[j], geo = gt_regions[i], time = gt_time)
-    temp <- temp[["interest_over_time"]]
-    temp["keyword"][temp["keyword"] == gt_topic_codes[j]] =  gt_topic_names[j]
-    data_more <- rbind(data_more, temp)
-    Sys.sleep(gt_waiting_time)
-  }
-}
-
-#, 
-#, 
-
- #, , '/m/032tl', '/m/0273t5w', '/m/03w7y7','/m/07gyp7', '/m/0k8z', '/m/027x7n', '/m/014dsx', '/m/03gkl', '/g/122h6md7', '/m/07s_c','/m/01dnzs', '/m/0174k2', '/m/040b_t', '/m/015gxd'
-
-#,  , 'Fashion', 'Mortgage_loan', 'Baggage','McDonalds', 'apple','Fitness', 'Travel', 'Holiday', 'Labor', 'Unemployment', 'Loan', 'Washing_machine', 'Fridge', 'Emigration'
-```
-
-```{r}
-gt_time <- '2010-01-01 2023-01-31'
-gt_regions <- c('MD')
-gt_topic_codes <- c(  '/m/03w7y7','/m/07gyp7', '/m/0k8z', "/m/059z22")
-gt_topic_names <- c( 'Baggage','McDonalds', 'apple','Fitness' )
-gt_waiting_time <- 30
-
-# create an empty dataframe to store all datasets
-data_more1 <- data.frame(matrix(ncol = 7, nrow = 0))
-
-# use for loop to scrape data 
-for (i in 1:length(gt_regions)){
-  for (j in 1:length(gt_topic_codes)){
-    temp <- gtrends(gt_topic_codes[j], geo = gt_regions[i], time = gt_time)
-    temp <- temp[["interest_over_time"]]
-    temp["keyword"][temp["keyword"] == gt_topic_codes[j]] =  gt_topic_names[j]
-    data_more1 <- rbind(data_more1, temp)
-    Sys.sleep(gt_waiting_time)
-  }
-}
-
-#, ,, '/m/014dsx', '/m/03gkl', '/g/122h6md7', '/m/07s_c','/m/01dnzs',  '/m/0174k2', '/m/040b_t', '/m/04n7dpf', '/m/0h6dlrc', '/m/0h5wpdf', '/m/032tl', '/m/015gxd', '/g/121mknrx'
-#, 'Travel', 'Holiday', 'Labor', 'Unemployment', 'Loan', 'Washing_machine', 'Fridge', 'Interest_rate', 'BMW', 'Mercedes', 'Fashion', 'Emigration',  'Construction'
-
- #, , , , , , , ,, ', , '/m/015gxd'
-
-#,  , ,, , , , , , , , 'Emigration'
-```
-
-```{r}
-gt_time <- '2010-01-01 2023-01-31'
-gt_regions <- c('MD')
-gt_topic_codes <- c(  '/m/014dsx', '/m/03gkl', '/g/122h6md7','/m/01dnzs',  '/m/0174k2', '/m/040b_t', '/m/04n7dpf', '/m/0h6dlrc', '/m/0h5wpdf', '/m/032tl', '/m/015gxd', '/g/121mknrx')
-gt_topic_names <- c( 'Travel', 'Holiday', 'Labor', 'Loan', 'Washing_machine', 'Fridge', 'Interest_rate', 'BMW', 'Mercedes', 'Fashion', 'Emigration',  'Construction' )
-gt_waiting_time <- 30
-
-# create an empty dataframe to store all datasets
-data_more2 <- data.frame(matrix(ncol = 7, nrow = 0))
-
-# use for loop to scrape data 
-for (i in 1:length(gt_regions)){
-  for (j in 1:length(gt_topic_codes)){
-    temp <- gtrends(gt_topic_codes[j], geo = gt_regions[i], time = gt_time)
-    temp <- temp[["interest_over_time"]]
-    temp["keyword"][temp["keyword"] == gt_topic_codes[j]] =  gt_topic_names[j]
-    data_more2 <- rbind(data_more2, temp)
-    Sys.sleep(gt_waiting_time)
-  }
-}
-
-#, ,, 
-#, 
-
- #, , , , , , , ,, ', , '/m/015gxd'
-
-#,  , ,, , , , , , , , 'Emigration'
-```
-
-
-
-```{r}
-gt_time <- '2010-01-01 2023-01-31'
-gt_regions <- c('MD')
-gt_topic_codes <- c("/m/07s_c", "/m/0273t5w")
-gt_topic_names <- c( 'Unemployment' , 'Mortgage_Loan')
-gt_waiting_time <- 30
-
-# create an empty dataframe to store all datasets
-data_more3 <- data.frame(matrix(ncol = 7, nrow = 0))
-
-# use for loop to scrape data 
-for (i in 1:length(gt_regions)){
-  for (j in 1:length(gt_topic_codes)){
-    temp <- gtrends(gt_topic_codes[j], geo = gt_regions[i], time = gt_time)
-    temp <- temp[["interest_over_time"]]
-    temp["keyword"][temp["keyword"] == gt_topic_codes[j]] =  gt_topic_names[j]
-    data_more3 <- rbind(data_more3, temp)
-    Sys.sleep(gt_waiting_time)
-  }
-}
-
-#, ,, 
-#, 
-
- #, , , , , , , ,, ', , '/m/015gxd'
-
-#,  , ,, , , , , , , , 'Emigration'
-```
-
-
-
-```{r}
-gt_time <- '2010-01-01 2023-01-31'
-gt_regions <- c('MD')
-gt_topic_codes <- c("/m/07s_c", "/m/0273t5w")
-gt_topic_names <- c( 'Unemployment' , 'Mortgage_Loan')
-gt_waiting_time <- 30
-
-# create an empty dataframe to store all datasets
-data_more3 <- data.frame(matrix(ncol = 7, nrow = 0))
-
-# use for loop to scrape data 
-for (i in 1:length(gt_regions)){
-  for (j in 1:length(gt_topic_codes)){
-    temp <- gtrends(gt_topic_codes[j], geo = gt_regions[i], time = gt_time)
-    temp <- temp[["interest_over_time"]]
-    temp["keyword"][temp["keyword"] == gt_topic_codes[j]] =  gt_topic_names[j]
-    data_more3 <- rbind(data_more3, temp)
-    Sys.sleep(gt_waiting_time)
-  }
-}
-
-#, ,, 
-#, 
-
- #, , , , , , , ,, ', , '/m/015gxd'
-
-#,  , ,, , , , , , , , 'Emigration'
-```
-
-
 
 
 ```{r}
 # Make giant data set
-Moldova_Trends_Data = rbind(data1, data2, data3, data4, data_more1, data_more2,data_more3 )
-Moldova_Trends_Data = distinct(Moldova_Trends_Data)
+Mtrends_data2 = rbind(Mdata1, Mdata3 )
+Mtrends_data2 = distinct(Mtrends_data2)
 
 # change the <1 to 0s
- Moldova_Trends_Data <- data.frame(lapply(Moldova_Trends_Data, function(x) {
+ Mtrends_data2 <- data.frame(lapply(Mtrends_data2, function(x) {
                   gsub("<1", "0.5", x)
               }))
 ```
 
 ```{r}
-write.csv(Moldova_Trends_Data, file = "/Users/jessiebierschenk/Cossack Collectors/Moldova_Trends_Data.csv", row.names=FALSE)
-
-#view(Moldova_Trends_Data)
-Moldova_Trends_Data= Moldova_Trends_Data %>% 
-  mutate(name = ifelse(geo == 'MD-BA', "Balti", ifelse( geo == 'MD-BD', "Bender", ifelse(geo== "MD-CU", "Chisinau", ifelse(geo == "MD", "Moldova", "Transnistria")))))
-
-Moldova_Trends_Data$date = as.Date(Moldova_Trends_Data$date)
-Moldova_Trends_Data$hits = as.numeric(Moldova_Trends_Data$hits)
-
-Moldova_Trends_Data$year = substr(Moldova_Trends_Data$date, 1, 4)
-
+write.csv(Mtrends_data2, file = "/Users/jessiebierschenk/Cossack Collectors/Mtrends_data2.csv", row.names=FALSE)
 ```
 
+```{r}
+#view(Mtrends_data2)
+Mtrends_data2= Mtrends_data2 %>% 
+  mutate(name = ifelse(geo == 'MD-BA', "Balti", ifelse( geo == 'MD-BD', "Bender", ifelse(geo== "MD-CU", "Chisinau", ifelse(geo == "MD", "Moldova", "Transnistria")))))
 
+Mtrends_data2$hits = as.numeric(Mtrends_data2$hits)
+
+Mtrends_data2 =Mtrends_data2 %>% 
+  pivot_wider(names_from = keyword, values_from = hits)
+
+Mtrends_data2$date = as.Date(Mtrends_data2$date)
+
+Mtrends_data2$year = substr(Mtrends_data2$date, 1, 4)
+Mtrends_data2$year = as.numeric(Mtrends_data2$year)
+
+Mtrends_data2$month = format(as.Date(Mtrends_data2$date, format="%Y-%m-%d"),"%m")
+Mtrends_data2$month = as.numeric(Mtrends_data2$month)
+
+```
 
 
 ```{r}
-# Data Cleaning
+NTL <- read.csv("NTL/NTL_Moldova.csv")
+view(NTL)
+```
 
+
+```{r}
+# Merge Data based on month, year, and location
+# Group by mean of multiple columns
+df2 <- Mtrends_data2 
+df2 = aggregate(df2[, 7:16], list(df2$name, df2$month,df2$year), mean)
+colnames(df2)[1] ="name"
+colnames(df2)[2] ="month"
+colnames(df2)[3] ="year"
+
+
+Merged_data1 = left_join(UNHCR_clean, df2, by = c('arrival_year'= 'year', 'arrival_month'= 'month',  'location'='name'))
+
+# Merge for lag
+lag_trends_data2 = df2
+
+colnames(lag_trends_data2)[4] ="lag_Travel"
+colnames(lag_trends_data2)[5] ="lag_Holiday"
+colnames(lag_trends_data2)[6] ="lag_Labor"
+colnames(lag_trends_data2)[7] ="lag_Unemployment"
+colnames(lag_trends_data2)[8] ="lag_Loan"
+colnames(lag_trends_data2)[9] ="lag_Washing_machine"
+colnames(lag_trends_data2)[10] ="lag_Fridge"
+colnames(lag_trends_data2)[11] ="lag_BMW"
+colnames(lag_trends_data2)[12] ="lag_Mercedes"
+colnames(lag_trends_data2)[13] ="lag_Fashion"
+
+Merged_data = left_join(Merged_data1, lag_trends_data2, by = c('arrival_year'= 'year', 'month_lag'= 'month',  'location'='name'))
 
 ```
+
+```{r}
+#Data cleaning on Merged data
+Merged_data = Merged_data %>% 
+  mutate(language_pref_ukrainian = ifelse(language_preference == "russian ukrainian" | language_preference == "ukrainian russian" | language_preference == "ukrainian", 1, 0), language_pref_russian = ifelse(language_preference == "russian" |language_preference == "romana russian" | language_preference == "russian ukrainian" | language_preference == "ukrainian russian", 1, 0), language_pref_romana = ifelse(language_preference == "romana russian", 1, 0), Return_Ukraine = ifelse(displacement_intentions == "return_ua_origin" | displacement_intentions == "return_ua_other", 1, ifelse(displacement_intentions == "move_md" | displacement_intentions == "move_outmd" | displacement_intentions == "stay_different" | displacement_intentions == "stay_location", 0, NA)), `hh_priority_needs/healthcare` = as.factor(`hh_priority_needs/healthcare`), `hh_aid_preference/education_enrolment` = as.factor(`hh_aid_preference/education_enrolment`), hoh_host_marital = as.factor(hoh_host_marital), infant_hh= as.factor(infant_hh), hh_items_available = as.factor(hh_items_available), hh_discrimination_md = as.factor(hh_discrimination_md), location = as.factor(location), hh_accomodation = as.factor(hh_accomodation), hh_accomodation = as.factor(hh_accomodation), admin_oblast = as.factor(admin_oblast), displacement_secondary = as.factor(displacement_secondary), displacement_secondary_loc = as.factor(displacement_secondary_loc), displacement_return = as.factor(displacement_return), hoh_host_marital = as.factor(hoh_host_marital), infant_hh = as.factor(infant_hh), hh_items_available = as.factor(hh_items_available), hoh_education = as.factor(hoh_education), language_preference_need = as.factor(language_preference_need), hoh_education_diploma = as.factor(hoh_education_diploma), hoh_occupation = as.factor(hoh_occupation), hoh_ocupation_sector= as.factor(hoh_ocupation_sector), hoh_ua_occupation_same = as.factor(hoh_ua_occupation_same), hoh_current_occupation = as.factor(hoh_current_occupation), csi_sold_assets = as.factor(csi_sold_assets), csi_spent_savings = as.factor(csi_spent_savings), csi_withdrew_children = as.factor(csi_withdrew_children), csi_sold_house = as.factor(csi_sold_house), expenses_modality = as.factor(expenses_modality), hh_id_available = as.factor(hh_id_available), hh_discrimination_md = as.factor(hh_discrimination_md) )
+#Merged_data = subset(Merged_data, select = -c(hoh_current_ocupation_sector))
+Merged_data$language_preference_need[Merged_data$language_preference_need == "not_interested_in_work"] <- "no"
+Merged_data$language_preference_need = as.factor(Merged_data$language_preference_need)
+Merged_data$income_formal_work[Merged_data$income_formal_work == "N/A"] <- NA
+Merged_data$income_formal_work = as.numeric(Merged_data$income_formal_work)
+Merged_data$income_daily_labor[Merged_data$income_daily_labor == "N/A"] <- NA
+Merged_data$income_daily_labor = as.numeric(Merged_data$income_daily_labor)
+Merged_data$income_business[Merged_data$income_business == "N/A"] <- NA
+Merged_data$income_business = as.numeric(Merged_data$income_business)
+Merged_data$income_savings[Merged_data$income_savings == "N/A"] <- NA
+Merged_data$income_savings = as.numeric(Merged_data$income_savings)
+Merged_data$income_government[Merged_data$income_government == "N/A"] <- NA
+Merged_data$income_government = as.numeric(Merged_data$income_government)
+Merged_data$income_remittances[Merged_data$income_remittances == "N/A"] <- NA
+Merged_data$income_remittances = as.numeric(Merged_data$income_remittances)
+Merged_data$income_support_family[Merged_data$income_support_family == "N/A"] <- NA
+Merged_data$income_support_family = as.numeric(Merged_data$income_support_family)
+Merged_data$income_humanitarian_assistance[Merged_data$income_humanitarian_assistance == "N/A"] <- NA
+Merged_data$income_humanitarian_assistance = as.numeric(Merged_data$income_humanitarian_assistance)
+Merged_data$income_donations[Merged_data$income_donations == "N/A"] <- NA
+Merged_data$income_donations= as.numeric(Merged_data$income_donations)
+Merged_data$expenses_food[Merged_data$expenses_food == "N/A"] <- NA
+Merged_data$expenses_food= as.numeric(Merged_data$expenses_food)
+Merged_data$expenses_rent[Merged_data$expenses_rent == "N/A"] <- NA
+Merged_data$expenses_rent= as.numeric(Merged_data$expenses_rent)
+Merged_data$expenses_water[Merged_data$expenses_water == "N/A"] <- NA
+Merged_data$expenses_water= as.numeric(Merged_data$expenses_water)
+Merged_data$expenses_nonfood[Merged_data$expenses_nonfood == "N/A"] <- NA
+Merged_data$expenses_nonfood= as.numeric(Merged_data$expenses_nonfood)
+Merged_data$expenses_utilities[Merged_data$expenses_utilities == "N/A"] <- NA
+Merged_data$expenses_utilities= as.numeric(Merged_data$expenses_utilities)
+Merged_data$expenses_fuel[Merged_data$expenses_fuel == "N/A"] <- NA
+Merged_data$expenses_fuel= as.numeric(Merged_data$expenses_fuel)
+Merged_data$expenses_transport[Merged_data$expenses_transport == "N/A"] <- NA
+Merged_data$expenses_transport= as.numeric(Merged_data$expenses_transport)
+Merged_data$expenses_communication[Merged_data$expenses_communication == "N/A"] <- NA
+Merged_data$expenses_communication= as.numeric(Merged_data$expenses_communication)
+Merged_data$household_number[Merged_data$household_number == "N/A"] <- NA
+Merged_data$household_number= as.numeric(Merged_data$household_number)
+Merged_data$diff_in_days[Merged_data$diff_in_days == "N/A"] <- NA
+Merged_data$diff_in_days= as.numeric(Merged_data$diff_in_days)
+
+#non_num = Merged_data %>% 
+ # select_if(negate(is.numeric))
+#non_num
+
+```
+
+Our response variable is whether the individual plans to return to Ukraine or not. If the respondent intends to return to Ukraine (whether to their home oblast or other), the response was recorded as a "yes" (1); if the respondent plans on staying in Moldova or moving to a different country, the response was recorded as "no" (0). Using this criteria, 553 respondents do not plan to return to Ukraine, 73 do plan to return to Ukraine, and 78 either didn't respond or did not know.
 
