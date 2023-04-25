@@ -1,0 +1,399 @@
+---
+title: "Modeling"
+output: html_document
+date: "2023-04-20"
+---
+
+```{r setup, include=FALSE}
+library(readxl)
+UNHCR <- read_excel("UNHCR 2022 Multi-Sector Needs Assessment Consolidated Dataset.xlsx", 
+    sheet = "family-level_data")
+UA_codes <- read_excel("converting_UA_codes.xlsx")
+
+library(tidyverse)
+library(broom)
+library(ggplot2)
+library(dplyr)
+library(plyr)
+library(gtrendsR)
+library(dplyr)
+library(tidyverse)
+library(tibble)
+library(gridExtra)
+library(grid)
+library(lubridate)
+library(ggplot2)
+```
+
+```{r}
+# Data Cleaning
+UNHCR_clean = UNHCR %>% 
+  add_column(location = NA)
+UNHCR_clean$location[UNHCR_clean$admin1 == "chisinau"] <- "Chisinau"
+UNHCR_clean$location[UNHCR_clean$admin1 == "calarasi"] <- "Chisinau"
+UNHCR_clean$location[UNHCR_clean$admin1 == "cimislia"] <- "Chisinau"
+UNHCR_clean$location[UNHCR_clean$admin1 == "ialoveni"] <- "Chisinau"
+UNHCR_clean$location[UNHCR_clean$admin1 == "straseni"] <- "Chisinau"
+
+UNHCR_clean$location[UNHCR_clean$admin1 == "balti"] <- "Balti"
+UNHCR_clean$location[UNHCR_clean$admin1 == "telenesti"] <- "Balti"
+UNHCR_clean$location[UNHCR_clean$admin1 == "falesti"] <- "Balti"
+
+UNHCR_clean$location[UNHCR_clean$admin1 == "dubarasi"] <- "Transnistria"
+
+UNHCR_clean$location[UNHCR_clean$admin1 == "annenni_noi"] <- "Bender"
+UNHCR_clean$location[UNHCR_clean$admin1 == "stefan_vodatabl"] <- "Bender"
+
+
+
+
+```
+
+https://en.wikipedia.org/wiki/ISO_3166-2:MD
+
+https://data.worldbank.org/country/MD
+
+Due to limited international recognition, Transnistria is considered part of Moldova and does not have its own ISO 3166-1 code.
+
+uta_gagauzia = 
+
+* dubasrasi make Transnistria
+* make bender annenni_noi and add stefan_voda
+
+* add telenesti, falesti, to balti
+
+Border regions: basarabeasca, briceni, uta_gagauzia, ocnita, taraclia
+
+* add calarasi, cimislia, ialoveni, straseni into Chisinau
+
+*combine criuleni and dubarasi into dubarasi
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+```{r}
+gt_time <- '2022-01-01 2022-12-31'
+gt_regions <- c('MD-BA', 'MD-BD', 'MD-CU', 'MD-SN')
+gt_topic_codes <- c('/m/014dsx', '/m/03gkl', '/g/122h6md7', '/m/07s_c','/m/01dnzs', '/m/0174k2', '/m/040b_t' )
+gt_topic_names <- c('Travel', 'Holiday', 'Labor', 'Unemployment', 'Loan', 'Washing_machine', 'Fridge')
+gt_waiting_time <- 30
+
+# create an empty dataframe to store all datasets
+data1 <- data.frame(matrix(ncol = 7, nrow = 0))
+
+# use for loop to scrape data 
+for (i in 1:length(gt_regions)){
+  for (j in 1:length(gt_topic_codes)){
+    temp <- gtrends(gt_topic_codes[j], geo = gt_regions[i], time = gt_time)
+    temp <- temp[["interest_over_time"]]
+    temp["keyword"][temp["keyword"] == gt_topic_codes[j]] =  gt_topic_names[j]
+    data1 <- rbind(data1, temp)
+    Sys.sleep(gt_waiting_time)
+  }
+}
+```
+
+
+```{r}
+gt_time <- '2022-01-01 2022-12-31'
+gt_regions <- c('MD-BA', 'MD-BD', 'MD-CU')
+gt_topic_codes <- c( '/m/0273t5w', '/m/03w7y7','/m/07gyp7', '/m/0k8z', '/m/027x7n')
+gt_topic_names <- c(  'Mortgage_loan', 'Baggage','McDonalds', 'apple','Fitness')
+gt_waiting_time <- 30
+
+# create an empty dataframe to store all datasets
+data2 <- data.frame(matrix(ncol = 7, nrow = 0))
+
+# use for loop to scrape data 
+for (i in 1:length(gt_regions)){
+  for (j in 1:length(gt_topic_codes)){
+    temp <- gtrends(gt_topic_codes[j], geo = gt_regions[i], time = gt_time)
+    temp <- temp[["interest_over_time"]]
+    temp["keyword"][temp["keyword"] == gt_topic_codes[j]] =  gt_topic_names[j]
+    data2 <- rbind(data2, temp)
+    Sys.sleep(gt_waiting_time)
+  }
+}
+
+#, 'Export', 'Interest_rate',
+#, '/m/01sr3q' , '/m/04n7dpf',
+
+#"MD-SN"
+
+#   '/m/0h6dlrc', '/m/0h5wpdf',  '/m/02r33n4', '/m/03gc5x', '/m/015gxd',  '/m/06q07'
+#  , 'BMW', 'Mercedes', , 'Calvin_Klein', 'Gucci', 'Emigration', 'Sony'
+
+
+#, , '/m/03nw7w', '/m/0hbm6', '/m/022x_', '/m/0218w7', '/m/032tl', '/m/07s6fsf', '/m/039dhw', '/g/11c1xm7ml2', '/m/06k1r', '/m/01y857', '/m/02640pc', '/g/121mknrx', '/m/07bsy', '/m/05sq5', '/g/11clfj__ql'
+#, , 'Recruitment', 'Savings', 'Computer_security', 'Unemployment_benefits', 'Fashion', 'MBA_degree', 'Procurement', 'Prozorro', 'Real_Estate', 'Rent', 'Import', 'Construction', 'Transport', 'Patent', 'work.ua'
+
+# 
+
+
+```
+
+
+```{r}
+gt_time <- '2022-01-01 2022-12-31'
+gt_regions <- c('MD-BA', 'MD-BD', 'MD-CU')
+gt_topic_codes <- c('/m/04n7dpf', '/m/0h6dlrc', '/m/0h5wpdf', '/m/032tl')
+gt_topic_names <- c('Interest_rate', 'BMW', 'Mercedes', 'Fashion' )
+gt_waiting_time <- 30
+
+# create an empty dataframe to store all datasets
+Mdata3 <- data.frame(matrix(ncol = 7, nrow = 0))
+
+# use for loop to scrape data 
+for (i in 1:length(gt_regions)){
+  for (j in 1:length(gt_topic_codes)){
+    temp <- gtrends(gt_topic_codes[j], geo = gt_regions[i], time = gt_time)
+    temp <- temp[["interest_over_time"]]
+    temp["keyword"][temp["keyword"] == gt_topic_codes[j]] =  gt_topic_names[j]
+    Mdata3 <- rbind(Mdata3, temp)
+    Sys.sleep(gt_waiting_time)
+  }
+}
+
+
+
+#   ,  '/m/02r33n4', '/m/03gc5x', '/m/015gxd',  '/m/06q07'
+#  ,, , 'Calvin_Klein', 'Gucci', 'Emigration', 'Sony'
+
+# '/m/022x_', 
+#, , 'Computer_security', 
+
+
+#, ,, '/m/07s6fsf', '/m/039dhw', '/g/11c1xm7ml2', '/m/06k1r', '/m/01y857', '/m/02640pc', '/g/121mknrx', '/m/07bsy', '/m/05sq5', '/g/11clfj__ql'
+
+#, ,  , 'MBA_degree', 'Procurement', 'Prozorro', 'Real_Estate', 'Rent', 'Import', 'Construction', 'Transport', 'Patent', 'work.ua'
+```
+
+
+```{r}
+gt_time <- '2010-01-01 2023-01-31'
+gt_regions <- c('MD-BA', 'MD-BD', 'MD-CU', "MD-SN")
+gt_topic_codes <- c( '/m/015gxd', '/g/121mknrx', '/m/07bsy')
+gt_topic_names <- c('Emigration',  'Construction', 'Transport')
+gt_waiting_time <- 30
+
+# create an empty dataframe to store all datasets
+data4 <- data.frame(matrix(ncol = 7, nrow = 0))
+
+# use for loop to scrape data 
+for (i in 1:length(gt_regions)){
+  for (j in 1:length(gt_topic_codes)){
+    temp <- gtrends(gt_topic_codes[j], geo = gt_regions[i], time = gt_time)
+    temp <- temp[["interest_over_time"]]
+    temp["keyword"][temp["keyword"] == gt_topic_codes[j]] =  gt_topic_names[j]
+    data4 <- rbind(data4, temp)
+    Sys.sleep(gt_waiting_time)
+  }
+}
+
+
+
+#   ,  '/m/01y857'
+#  ,, , 'Rent'
+
+
+#, ,, ,, '/m/02640pc',  , '/m/05sq5', '/g/11clfj__ql'
+#, ,  , , , 'Import',, , 'Patent', 'work.ua'
+```
+
+```{r}
+gt_time <- '2010-01-01 2023-01-31'
+gt_regions <- c('MD-DU', "MD-CT")
+gt_topic_codes <- c( '/g/121mknrx', '/m/07bsy')
+gt_topic_names <- c('Construction', 'Transport' )
+gt_waiting_time <- 30
+
+# create an empty dataframe to store all datasets
+data_more <- data.frame(matrix(ncol = 7, nrow = 0))
+
+# use for loop to scrape data 
+for (i in 1:length(gt_regions)){
+  for (j in 1:length(gt_topic_codes)){
+    temp <- gtrends(gt_topic_codes[j], geo = gt_regions[i], time = gt_time)
+    temp <- temp[["interest_over_time"]]
+    temp["keyword"][temp["keyword"] == gt_topic_codes[j]] =  gt_topic_names[j]
+    data_more <- rbind(data_more, temp)
+    Sys.sleep(gt_waiting_time)
+  }
+}
+
+#, 
+#, 
+
+ #, , '/m/032tl', '/m/0273t5w', '/m/03w7y7','/m/07gyp7', '/m/0k8z', '/m/027x7n', '/m/014dsx', '/m/03gkl', '/g/122h6md7', '/m/07s_c','/m/01dnzs', '/m/0174k2', '/m/040b_t', '/m/015gxd'
+
+#,  , 'Fashion', 'Mortgage_loan', 'Baggage','McDonalds', 'apple','Fitness', 'Travel', 'Holiday', 'Labor', 'Unemployment', 'Loan', 'Washing_machine', 'Fridge', 'Emigration'
+```
+
+```{r}
+gt_time <- '2010-01-01 2023-01-31'
+gt_regions <- c('MD')
+gt_topic_codes <- c(  '/m/03w7y7','/m/07gyp7', '/m/0k8z', "/m/059z22")
+gt_topic_names <- c( 'Baggage','McDonalds', 'apple','Fitness' )
+gt_waiting_time <- 30
+
+# create an empty dataframe to store all datasets
+data_more1 <- data.frame(matrix(ncol = 7, nrow = 0))
+
+# use for loop to scrape data 
+for (i in 1:length(gt_regions)){
+  for (j in 1:length(gt_topic_codes)){
+    temp <- gtrends(gt_topic_codes[j], geo = gt_regions[i], time = gt_time)
+    temp <- temp[["interest_over_time"]]
+    temp["keyword"][temp["keyword"] == gt_topic_codes[j]] =  gt_topic_names[j]
+    data_more1 <- rbind(data_more1, temp)
+    Sys.sleep(gt_waiting_time)
+  }
+}
+
+#, ,, '/m/014dsx', '/m/03gkl', '/g/122h6md7', '/m/07s_c','/m/01dnzs',  '/m/0174k2', '/m/040b_t', '/m/04n7dpf', '/m/0h6dlrc', '/m/0h5wpdf', '/m/032tl', '/m/015gxd', '/g/121mknrx'
+#, 'Travel', 'Holiday', 'Labor', 'Unemployment', 'Loan', 'Washing_machine', 'Fridge', 'Interest_rate', 'BMW', 'Mercedes', 'Fashion', 'Emigration',  'Construction'
+
+ #, , , , , , , ,, ', , '/m/015gxd'
+
+#,  , ,, , , , , , , , 'Emigration'
+```
+
+```{r}
+gt_time <- '2010-01-01 2023-01-31'
+gt_regions <- c('MD')
+gt_topic_codes <- c(  '/m/014dsx', '/m/03gkl', '/g/122h6md7','/m/01dnzs',  '/m/0174k2', '/m/040b_t', '/m/04n7dpf', '/m/0h6dlrc', '/m/0h5wpdf', '/m/032tl', '/m/015gxd', '/g/121mknrx')
+gt_topic_names <- c( 'Travel', 'Holiday', 'Labor', 'Loan', 'Washing_machine', 'Fridge', 'Interest_rate', 'BMW', 'Mercedes', 'Fashion', 'Emigration',  'Construction' )
+gt_waiting_time <- 30
+
+# create an empty dataframe to store all datasets
+data_more2 <- data.frame(matrix(ncol = 7, nrow = 0))
+
+# use for loop to scrape data 
+for (i in 1:length(gt_regions)){
+  for (j in 1:length(gt_topic_codes)){
+    temp <- gtrends(gt_topic_codes[j], geo = gt_regions[i], time = gt_time)
+    temp <- temp[["interest_over_time"]]
+    temp["keyword"][temp["keyword"] == gt_topic_codes[j]] =  gt_topic_names[j]
+    data_more2 <- rbind(data_more2, temp)
+    Sys.sleep(gt_waiting_time)
+  }
+}
+
+#, ,, 
+#, 
+
+ #, , , , , , , ,, ', , '/m/015gxd'
+
+#,  , ,, , , , , , , , 'Emigration'
+```
+
+
+
+```{r}
+gt_time <- '2010-01-01 2023-01-31'
+gt_regions <- c('MD')
+gt_topic_codes <- c("/m/07s_c", "/m/0273t5w")
+gt_topic_names <- c( 'Unemployment' , 'Mortgage_Loan')
+gt_waiting_time <- 30
+
+# create an empty dataframe to store all datasets
+data_more3 <- data.frame(matrix(ncol = 7, nrow = 0))
+
+# use for loop to scrape data 
+for (i in 1:length(gt_regions)){
+  for (j in 1:length(gt_topic_codes)){
+    temp <- gtrends(gt_topic_codes[j], geo = gt_regions[i], time = gt_time)
+    temp <- temp[["interest_over_time"]]
+    temp["keyword"][temp["keyword"] == gt_topic_codes[j]] =  gt_topic_names[j]
+    data_more3 <- rbind(data_more3, temp)
+    Sys.sleep(gt_waiting_time)
+  }
+}
+
+#, ,, 
+#, 
+
+ #, , , , , , , ,, ', , '/m/015gxd'
+
+#,  , ,, , , , , , , , 'Emigration'
+```
+
+
+
+```{r}
+gt_time <- '2010-01-01 2023-01-31'
+gt_regions <- c('MD')
+gt_topic_codes <- c("/m/07s_c", "/m/0273t5w")
+gt_topic_names <- c( 'Unemployment' , 'Mortgage_Loan')
+gt_waiting_time <- 30
+
+# create an empty dataframe to store all datasets
+data_more3 <- data.frame(matrix(ncol = 7, nrow = 0))
+
+# use for loop to scrape data 
+for (i in 1:length(gt_regions)){
+  for (j in 1:length(gt_topic_codes)){
+    temp <- gtrends(gt_topic_codes[j], geo = gt_regions[i], time = gt_time)
+    temp <- temp[["interest_over_time"]]
+    temp["keyword"][temp["keyword"] == gt_topic_codes[j]] =  gt_topic_names[j]
+    data_more3 <- rbind(data_more3, temp)
+    Sys.sleep(gt_waiting_time)
+  }
+}
+
+#, ,, 
+#, 
+
+ #, , , , , , , ,, ', , '/m/015gxd'
+
+#,  , ,, , , , , , , , 'Emigration'
+```
+
+
+
+
+```{r}
+# Make giant data set
+Moldova_Trends_Data = rbind(data1, data2, data3, data4, data_more1, data_more2,data_more3 )
+Moldova_Trends_Data = distinct(Moldova_Trends_Data)
+
+# change the <1 to 0s
+ Moldova_Trends_Data <- data.frame(lapply(Moldova_Trends_Data, function(x) {
+                  gsub("<1", "0.5", x)
+              }))
+```
+
+```{r}
+write.csv(Moldova_Trends_Data, file = "/Users/jessiebierschenk/Cossack Collectors/Moldova_Trends_Data.csv", row.names=FALSE)
+
+#view(Moldova_Trends_Data)
+Moldova_Trends_Data= Moldova_Trends_Data %>% 
+  mutate(name = ifelse(geo == 'MD-BA', "Balti", ifelse( geo == 'MD-BD', "Bender", ifelse(geo== "MD-CU", "Chisinau", ifelse(geo == "MD", "Moldova", "Transnistria")))))
+
+Moldova_Trends_Data$date = as.Date(Moldova_Trends_Data$date)
+Moldova_Trends_Data$hits = as.numeric(Moldova_Trends_Data$hits)
+
+Moldova_Trends_Data$year = substr(Moldova_Trends_Data$date, 1, 4)
+
+```
+
+
+
+
+```{r}
+# Data Cleaning
+
+
+```
+
