@@ -604,6 +604,8 @@ sapply(lapply(Merged_data_NTL_clean, unique), length)
 
 
 
+
+
 ```{r}
 write.csv(Merged_data_NTL_clean, file = "/Users/jessiebierschenk/Cossack Collectors/Merged_data_NTL_clean", row.names=FALSE)
 
