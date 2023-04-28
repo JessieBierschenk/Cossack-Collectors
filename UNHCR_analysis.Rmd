@@ -34,6 +34,8 @@ library(rgeos)
 library(dplyr)
 library(plyr)
 library(ggridges)
+library(tmap)
+library(raster)
 ```
 
 ```{r merge}
@@ -43,7 +45,6 @@ test <- UA_codes %>%
 UNHCR <- test %>%
   merge(UNHCR)
 ```
-
 
 ```{r EDA}
 UNHCR %>%
@@ -86,9 +87,9 @@ UNHCR %>%
 
 
 UNHCR %>%
-  ggplot(mapping = aes(hh_family_size)) +
+  ggplot(mapping = aes(as.character(hh_family_size))) +
   geom_bar() +
-  labs(title = "Family Size of Surveyed Refugees", subtitle = "UNHCR Multi-Sector Needs Assessment (May 16-May 31 2022)") + 
+  labs(title = "Household Size of Surveyed Refugees", subtitle = "UNHCR Multi-Sector Needs Assessment (May 16-May 31 2022)") + 
   theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1))
 
 
@@ -136,8 +137,7 @@ UNHCR %>%
 
 ```
 
-
-```{r sum-stats}
+```{r clean-data}
 UNHCR <- UNHCR %>%
   mutate(
     rac_dummy = if_else(rac_non_rac == "rac" | hh_accomodation == "acc_informal_rac", 1, 0),
@@ -193,6 +193,10 @@ UNHCR["expenses_fuel"][UNHCR["expenses_fuel"] == "N/A"] <- 0
 UNHCR["expenses_transport"][UNHCR["expenses_transport"] == "N/A"] <- 0
 UNHCR["expenses_communication"][UNHCR["expenses_communication"] == "N/A"] <- 0
 UNHCR["expenses_other"][UNHCR["expenses_other"] == "N/A"] <- 0
+```
+
+```{r sum-stats}
+
 
 
 
@@ -343,7 +347,7 @@ test <- UNHCR %>%
 # Those coming from Donetsk and Kherson arrived in Moldova the latest on average.
 
 data_oblasts <- test %>%
-  select(NAME_1)
+  dplyr::select(NAME_1)
 
 UNHCR %>%
   filter(NAME_1 %in% c(data_oblasts$NAME_1)) %>%
@@ -382,15 +386,6 @@ UNHCR %>%
   geom_bar(position="fill", color="black") +
   theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1))
 
-
-UNHCR %>%
-  filter(NAME_1 %in% c(data_oblasts$NAME_1)) %>%
-  mutate(goback = case_when(displacement_intentions == "Idntknow" | displacement_intentions == "no_response"~ "Unknown",
-                            displacement_intentions == "move_md" | displacement_intentions == "move_outmd" | displacement_intentions == "stay_location" | displacement_intentions == "stay_different" ~ "Not return to UA", 
-                            displacement_intentions == "return_ua_origin" | displacement_intentions == "return_ua_other"~ "Return to UA")) %>%
-  ggplot(aes(NAME_1, fill=goback)) +
-  geom_bar(position="fill", color="black") +
-  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1))
 
 UNHCR %>%
   filter(NAME_1 %in% c(data_oblasts$NAME_1)) %>%
@@ -478,6 +473,12 @@ UNHCR %>%
   geom_smooth(aes(children_count, rac_dummy), method = "lm", color = "red") +
   geom_smooth(aes(children_count, moldovan_dummy), method = "lm", color = "blue")
 
+
+relatives_dummy = "purple"
+rac_dummy = "red"
+moldovan_dummy = "blue"
+
+
 UNHCR %>%
   ggplot() +
   geom_point(aes(arrival, children_count), color = "red") +
@@ -522,7 +523,6 @@ UNHCR %>%
   theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1))
 
 UNHCR %>%
-  na.omit(age_speaker) %>% 
   ggplot(aes(hoh_occupation, fill=as.character(age_speaker))) +
   geom_bar(position="fill") +
   theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1))
@@ -530,7 +530,6 @@ UNHCR %>%
 
 
 UNHCR %>%
-  na.omit(age_speaker) %>% 
   ggplot(aes(hoh_occupation, age_speaker)) +
   geom_boxplot() +
   theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1))
@@ -538,7 +537,6 @@ UNHCR %>%
 
 
 UNHCR %>%
-  na.omit(age_speaker) %>% 
   ggplot() +
   geom_density_ridges2(aes(x = age_speaker, y = hoh_occupation)) +
   theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1))
@@ -546,14 +544,12 @@ UNHCR %>%
   
 
 UNHCR %>%
-  na.omit(age_speaker) %>% 
   ggplot() +
   geom_density_ridges2(aes(x = children_count, y = hoh_occupation)) +
   theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1))
 
   
 UNHCR %>%
-  na.omit(age_speaker) %>% 
   ggplot() +
   geom_density_ridges2(aes(x = hh_total_count, y = hoh_occupation)) +
   theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1))
@@ -564,7 +560,6 @@ UNHCR %>%
   mutate(goback = case_when(displacement_intentions == "Idntknow" | displacement_intentions == "no_response"~ "Unknown",
                             displacement_intentions == "move_md" | displacement_intentions == "move_outmd" | displacement_intentions == "stay_location" | displacement_intentions == "stay_different" ~ "Not return to UA", 
                             displacement_intentions == "return_ua_origin" | displacement_intentions == "return_ua_other"~ "Return to UA")) %>%
-  na.omit(age_speaker) %>% 
   ggplot(aes(hoh_occupation, fill=goback)) +
   geom_bar(position="fill", color="black") +
   theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1))
@@ -575,44 +570,72 @@ UNHCR %>%
 ```
 
 
+```{r}
 
 
+#download.file("https://geodata.ucdavis.edu/gadm/gadm4.1/shp/gadm41_UKR_shp.zip",destfile="data/ukraine_map.zip")
+
+#system("unzip data/ukraine_map.zip")
+
+map_1 <- readOGR( 
+  dsn= paste0(getwd()) , 
+  layer="gadm41_UKR_1",
+  verbose=FALSE, stringsAsFactors = FALSE)
+
+test2 <- UNHCR %>%
+  filter(hoh_probing_qs == "yes") %>%
+  group_by(NAME_1) %>%
+  dplyr::summarize(
+    russian_pref_freq = mean(language_preference_russian, na.rm=T),
+    avg_arrival = mean(ymd(arrival), na.rm=T),
+    avg_age = mean(age_speaker, na.rm=T),
+    rac_freq = mean(rac_dummy, na.rm=T),
+    private_freq = mean(private_dummy, na.rm=T),
+    hotel_freq = mean(hotel_dummy, na.rm=T),
+    relatives_freq = mean(relatives_dummy, na.rm=T),
+    moldovan_freq = mean(moldovan_dummy, na.rm=T),
+    avg_hh_total = mean(hh_total_count, na.rm=T),
+    avg_children = mean(children_count, na.rm=T),
+    avg_income_formal_work = mean(income_formal_work, na.rm=T),
+    avg_income_daily_labor = mean(income_daily_labor, na.rm=T),
+    avg_income_business = mean(income_business, na.rm=T),
+    avg_income_savings = mean(income_savings, na.rm=T),
+    avg_income_government = mean(income_government, na.rm=T),
+    avg_income_remittances = mean(income_remittances, na.rm=T),
+    avg_income_support_family = mean(income_support_family, na.rm=T),
+    avg_income_humanitarian_assistance = mean(income_humanitarian_assistance, na.rm=T),
+    avg_income_donations = mean(income_donations, na.rm=T),
+    avg_income_other = mean(income_other, na.rm=T),
+    avg_expenses_food = mean(expenses_food, na.rm=T),
+    avg_expenses_family = mean(expenses_family, na.rm=T),
+    avg_expenses_rent = mean(expenses_rent, na.rm=T),
+    avg_expenses_water = mean(expenses_water, na.rm=T),
+    avg_expenses_utilities = mean(expenses_utilities, na.rm=T),
+    avg_expenses_nonfood = mean(expenses_nonfood, na.rm=T),
+    avg_expenses_fuel = mean(expenses_fuel, na.rm=T),
+    avg_expenses_transport = mean(expenses_transport, na.rm=T),
+    avg_expenses_communication = mean(expenses_communication, na.rm=T),
+    avg_expenses_other = mean(expenses_other, na.rm=T),
+    n = n()
+    ) 
+```
 
 
-
-** work in progress, for some reason I couldn't get the group_by to work :(( **
-
-```{r map-orig}
-ukraine <- gadm36_UKR_1_sp
-
-ukraine@data$NAME_1
-ukraine.df <- fortify(ukraine)
+```{r doc-maps}
+ukraine <- getData("GADM", country="UKR", level=1)
 
 ukraine@data <- ukraine@data %>%
-  join(UA_codes, by = "NAME_1") %>%
-  mutate(admin_oblast = No_Dash)
+  merge(test2, by = "NAME_1") %>%
+  mutate(n == as.numeric(n))
 
-test <- UNHCR %>%
-  group_by(admin_oblast) %>%
-  summarize(n = sum())
+library(RColorBrewer)
+my_colors <- brewer.pal(6, "Reds") 
+my_colors <- colorRampPalette(my_colors)(6)
 
+class_of_country <- cut(test2$avg_arrival, 6)
+my_colors <- my_colors[as.numeric(class_of_country)]
 
+plot(ukraine , col=my_colors, main = "Moldovan migrants total from each oblast")
 
-
-ukraine@data %>%
-  join(UNHCR, by = )
-
-ukraine@data  <- ukraine@data %>%
-  mutate(onborder = if_else(NAME_1 %in% c("Sumy", "Kharkiv", "Luhans'k", "Donets'k", "Zaporizhzhya", "Chernihiv", "Crimea", "Sevastopol'"), TRUE, FALSE))
-
-ukraine@data$id <- rownames(ukraine@data)
-ukraine.df <- join(ukraine.df,ukraine@data, by="id")
-
-system.time(
-  plot(ggplot(ukraine.df)+
-         geom_polygon(aes(x=long, y=lat, group=group, fill=onborder), 
-                      color="grey20", size=0.15) +
-       coord_map() +
-         labs(title = "Regions Covered by this Dataset"))
-)
 ```
+
