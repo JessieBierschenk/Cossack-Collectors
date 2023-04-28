@@ -76,20 +76,7 @@ UNHCR_clean$month_lag = as.numeric(UNHCR_clean$month_lag)
 
 ```
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+# Google Trends Scraping
 ```{r}
 gt_time <- '2018-01-01 2022-12-31'
 gt_regions <- c('MD-BA', 'MD-BD', 'MD-CU', 'MD-SN')
@@ -137,8 +124,6 @@ for (i in 1:length(gt_regions)){
 ```
 
 
-
-
 ```{r}
 # Make giant data set
 Mtrends_data2 = rbind(Mdata1, Mdata3 )
@@ -176,12 +161,6 @@ Mtrends_data2$month = as.numeric(Mtrends_data2$month)
 
 
 ```{r}
-NTL <- read.csv("NTL/NTL_Moldova.csv")
-view(NTL)
-```
-
-
-```{r}
 # Merge Data based on month, year, and location
 # Group by mean of multiple columns
 df2 <- Mtrends_data2 
@@ -208,7 +187,6 @@ colnames(lag_trends_data2)[12] ="lag_Mercedes"
 colnames(lag_trends_data2)[13] ="lag_Fashion"
 
 Merged_data = left_join(Merged_data1, lag_trends_data2, by = c('arrival_year'= 'year', 'month_lag'= 'month',  'location'='name'))
-
 ```
 
 ```{r}
@@ -216,6 +194,10 @@ Merged_data = left_join(Merged_data1, lag_trends_data2, by = c('arrival_year'= '
 Merged_data = Merged_data %>% 
   mutate(language_pref_ukrainian = ifelse(language_preference == "russian ukrainian" | language_preference == "ukrainian russian" | language_preference == "ukrainian", 1, 0), language_pref_russian = ifelse(language_preference == "russian" |language_preference == "romana russian" | language_preference == "russian ukrainian" | language_preference == "ukrainian russian", 1, 0), language_pref_romana = ifelse(language_preference == "romana russian", 1, 0), Return_Ukraine = ifelse(displacement_intentions == "return_ua_origin" | displacement_intentions == "return_ua_other", 1, ifelse(displacement_intentions == "move_md" | displacement_intentions == "move_outmd" | displacement_intentions == "stay_different" | displacement_intentions == "stay_location", 0, NA)), `hh_priority_needs/healthcare` = as.factor(`hh_priority_needs/healthcare`), `hh_aid_preference/education_enrolment` = as.factor(`hh_aid_preference/education_enrolment`), hoh_host_marital = as.factor(hoh_host_marital), infant_hh= as.factor(infant_hh), hh_items_available = as.factor(hh_items_available), hh_discrimination_md = as.factor(hh_discrimination_md), location = as.factor(location), hh_accomodation = as.factor(hh_accomodation), hh_accomodation = as.factor(hh_accomodation), admin_oblast = as.factor(admin_oblast), displacement_secondary = as.factor(displacement_secondary), displacement_secondary_loc = as.factor(displacement_secondary_loc), displacement_return = as.factor(displacement_return), hoh_host_marital = as.factor(hoh_host_marital), infant_hh = as.factor(infant_hh), hh_items_available = as.factor(hh_items_available), hoh_education = as.factor(hoh_education), language_preference_need = as.factor(language_preference_need), hoh_education_diploma = as.factor(hoh_education_diploma), hoh_occupation = as.factor(hoh_occupation), hoh_ocupation_sector= as.factor(hoh_ocupation_sector), hoh_ua_occupation_same = as.factor(hoh_ua_occupation_same), hoh_current_occupation = as.factor(hoh_current_occupation), csi_sold_assets = as.factor(csi_sold_assets), csi_spent_savings = as.factor(csi_spent_savings), csi_withdrew_children = as.factor(csi_withdrew_children), csi_sold_house = as.factor(csi_sold_house), expenses_modality = as.factor(expenses_modality), hh_id_available = as.factor(hh_id_available), hh_discrimination_md = as.factor(hh_discrimination_md) )
 #Merged_data = subset(Merged_data, select = -c(hoh_current_ocupation_sector))
+
+
+
+Merged_data$Return_Ukraine = as.factor(Merged_data$Return_Ukraine)
 Merged_data$language_preference_need[Merged_data$language_preference_need == "not_interested_in_work"] <- "no"
 Merged_data$language_preference_need = as.factor(Merged_data$language_preference_need)
 Merged_data$income_formal_work[Merged_data$income_formal_work == "N/A"] <- NA
@@ -253,15 +235,383 @@ Merged_data$expenses_transport= as.numeric(Merged_data$expenses_transport)
 Merged_data$expenses_communication[Merged_data$expenses_communication == "N/A"] <- NA
 Merged_data$expenses_communication= as.numeric(Merged_data$expenses_communication)
 Merged_data$household_number[Merged_data$household_number == "N/A"] <- NA
-Merged_data$household_number= as.numeric(Merged_data$household_number)
 Merged_data$diff_in_days[Merged_data$diff_in_days == "N/A"] <- NA
 Merged_data$diff_in_days= as.numeric(Merged_data$diff_in_days)
+
+#Add total income
+test_data = Merged_data
+test_data$income_formal_work= replace(test_data$income_formal_work, is.na(test_data$income_formal_work), 0)
+test_data$income_daily_labor= replace(test_data$income_daily_labor, is.na(test_data$income_daily_labor), 0)
+test_data$income_business= replace(test_data$income_business, is.na(test_data$income_business), 0)
+test_data$income_savings= replace(test_data$income_savings, is.na(test_data$income_savings), 0)
+test_data$income_government= replace(test_data$income_government, is.na(test_data$income_government), 0)
+test_data$income_remittances= replace(test_data$income_remittances, is.na(test_data$income_remittances), 0)
+test_data$income_support_family= replace(test_data$income_support_family, is.na(test_data$income_support_family), 0)
+test_data$expenses_food= replace(test_data$expenses_food, is.na(test_data$expenses_food), 0)
+test_data$expenses_rent= replace(test_data$expenses_rent, is.na(test_data$expenses_rent), 0)
+test_data$expenses_water= replace(test_data$expenses_water, is.na(test_data$expenses_water), 0)
+test_data$expenses_nonfood= replace(test_data$expenses_nonfood, is.na(test_data$expenses_nonfood), 0)
+test_data$expenses_utilities= replace(test_data$expenses_utilities, is.na(test_data$expenses_utilities), 0)
+test_data$expenses_fuel= replace(test_data$expenses_fuel, is.na(test_data$expenses_fuel), 0)
+test_data$expenses_transport= replace(test_data$expenses_transport, is.na(test_data$expenses_transport), 0)
+test_data$expenses_communication= replace(test_data$expenses_communication, is.na(test_data$expenses_communication), 0)
+
+test_data = mutate(test_data, total_income = income_formal_work+ income_daily_labor +income_business + income_savings + income_government + income_remittances + income_support_family, total_expense = expenses_food+ expenses_rent +expenses_water +expenses_nonfood +expenses_utilities+ expenses_fuel + expenses_transport + expenses_communication)
+
+Merged_data$total_income= test_data$total_income
+Merged_data$total_income[Merged_data$total_income == 0 ] <- NA
+Merged_data$total_expense= test_data$total_expense
+Merged_data$total_expense[Merged_data$total_expense == 0 ] <- NA
 
 #non_num = Merged_data %>% 
  # select_if(negate(is.numeric))
 #non_num
 
+
+```
+
+```{r}
+#Clean up NTL data
+NTL_up <- read.csv("NTL_upd2.csv")
+NTL_up = NTL_up[c('regname','regcode', 'year','month','count_0','count_4','min_0','min_4','max_0','max_4','mean_0','mean_4','sum_0','sum_4','nodata_0','nodata_4','median_0','median_4','std_0','std_4','percentile_90_0','percentile_90_4')] <- str_split_fixed(NTL_up$regname.regcode.year.month.count_0.count_4.min_0.min_4.max_0.max_4.mean_0.mean_4.sum_0.sum_4.nodata_0.nodata_4.median_0.median_4.std_0.std_4.percentile_90_0.percentile_90_4, ';', 22)
+NTL_up= data.frame(NTL_up)
+colnames(NTL_up) = c('regname','regcode', 'year','month','count_0','count_4','min_0','min_4','max_0','max_4','mean_0','mean_4','sum_0','sum_4','nodata_0','nodata_4','median_0','median_4','std_0','std_4','percentile_90_0','percentile_90_4')
+
+NTL_up= NTL_up %>% 
+  mutate(location = ifelse(regname== " Bălţi", "Balti", ifelse( regname == " Bender", "Bender", ifelse( regname == " Transnistria", "Transnistria", ifelse(regname == " Chişinău", "Chisinau", NA)))))
+
+NTL_up_clean = NTL_up
+
+NTL_up_clean$mean_0 = substr(NTL_up_clean$mean_0, 1, 5)
+NTL_up_clean$mean_4 = substr(NTL_up_clean$mean_4, 1, 5)
+NTL_up_clean$std_0 = substr(NTL_up_clean$std_0, 1, 5)
+NTL_up_clean$std_4 = substr(NTL_up_clean$std_4, 1, 5)
+NTL_up_clean$percentile_90_0 = substr(NTL_up_clean$percentile_90_0, 1, 5)
+NTL_up_clean$percentile_90_4 = substr(NTL_up_clean$percentile_90_4, 1, 5)
+
+NTL_up_clean= NTL_up_clean %>% 
+  mutate(month = as.numeric(month), year = as.numeric(year), mean_0 = as.numeric(mean_0), mean_4 = as.numeric(mean_4), count_0 = as.numeric(count_0), count_4 = as.numeric(count_4), min_0 = as.numeric(min_0), min_4 = as.numeric(min_4), max_0 = as.numeric(max_0), max_4 = as.numeric(max_4), sum_0 = as.numeric(sum_0), sum_4 = as.numeric(sum_4), nodata_0 = as.numeric(nodata_0), nodata_4 = as.numeric(nodata_4), median_0 = as.numeric(median_0), median_4 = as.numeric(median_4), std_0 = as.numeric(std_0), std_4 = as.numeric(std_4), percentile_90_0 = as.numeric(percentile_90_0), percentile_90_4= as.numeric(percentile_90_4))
+
+NTL_up_clean = subset(NTL_up_clean, select = -c(regname, regcode))
+
+NTL_up_clean =  distinct(NTL_up_clean)
+NTL_up_clean = drop_na(NTL_up_clean, location)
+
+NTL_up_clean_lag = subset(NTL_up_clean, select = c(year,month, max_4, mean_4, sum_4, std_4, location))
+colnames(NTL_up_clean_lag) = c('year', 'month','lag_max_4', 'lag_mean_4', 'lag_sum_4', 'lag_std_4',"location" )
+```
+
+```{r}
+Merged_data_NTL = left_join(Merged_data, NTL_up_clean, by = c('arrival_year'= 'year', 'arrival_month'= 'month',  'location'='location'))
+Merged_data_NTL = left_join(Merged_data_NTL, NTL_up_clean_lag, by = c('arrival_year'= 'year', 'month_lag'= 'month',  'location'='location'))
+
+
+
+# clean the merged data so can better model
+Merged_data_NTL_clean$household_number = as.factor(Merged_data_NTL_clean$household_number)
+Merged_data_NTL_clean = Merged_data_NTL %>% 
+  mutate(household_number = ifelse(household_number ==1, "1", ifelse(household_number ==2, "2", ifelse(household_number == 3,"3", ifelse(household_number == 4, "4", ifelse(household_number >= 5, "5+", ifelse(is.na(household_number) == TRUE, "N/A", "N/A")))))))
+
+
+Merged_data_NTL_clean = Merged_data_NTL_clean %>% 
+  mutate( Adult_clothing_limited = ifelse(grepl("adult_clothing", hh_items_available, fixed = TRUE), 1, 0 ), basic_hygiene_limited = ifelse(grepl("basic_hygiene", hh_items_available, fixed = TRUE), 1, 0 ), beds_limited = ifelse(grepl("beds", hh_items_available, fixed = TRUE), 1, 0 ), children_clothing_limited = ifelse(grepl("children_clothing", hh_items_available, fixed = TRUE), 1, 0 ), diapers_limited = ifelse(grepl("diapers", hh_items_available, fixed = TRUE), 1, 0 ), heater_limited = ifelse(grepl("heater", hh_items_available, fixed = TRUE), 1, 0 ), kitchen_set_limited = ifelse(grepl("kitchen_set", hh_items_available, fixed = TRUE), 1, 0 ),menstrual_mat_limited = ifelse(grepl("menstrual_mat", hh_items_available, fixed = TRUE), 1, 0 ), none_limited = ifelse(grepl("none", hh_items_available, fixed = TRUE), 1, 0 ))
+
+
+Merged_data_NTL_clean = Merged_data_NTL_clean %>% 
+  mutate(perc_change_max = 100*(max_4-lag_max_4 )/lag_max_4, perc_change_mean = 100*(mean_4 - lag_mean_4)/lag_mean_4, perc_change_sum = 100*(sum_4 - lag_sum_4)/lag_sum_4 )
+
+
+Merged_data_NTL_clean = Merged_data_NTL_clean %>% 
+  mutate(income_formal_work = ifelse(income_formal_work <= 1000, "<1000", ifelse(income_formal_work>1000 & income_formal_work<=5000, "1,000-5,000", ifelse(income_formal_work >5000 & income_formal_work<=10000, "5,000-10,000", ifelse(income_formal_work>10000 & income_formal_work<=50000, "10,000-50,000", ifelse(income_formal_work>50000 & income_formal_work <= 100000, "50,000-100,000", ifelse(income_formal_work>100000, ">100,000", ifelse(is.na(income_formal_work)== T, "not mentioned", "---"))))))))
+Merged_data_NTL_clean = Merged_data_NTL_clean %>% 
+  mutate(income_daily_labor = ifelse(income_daily_labor <= 1000, "<1000", ifelse(income_daily_labor>1000 & income_daily_labor<=5000, "1,000-5,000", ifelse(income_daily_labor >5000 & income_daily_labor<=10000, "5,000-10,000", ifelse(income_daily_labor>10000 & income_daily_labor<=50000, "10,000-50,000", ifelse(income_daily_labor>50000 & income_daily_labor <= 100000, "50,000-100,000", ifelse(income_daily_labor>100000, ">100,000", ifelse(is.na(income_daily_labor)== T, "not mentioned", "---"))))))))
+Merged_data_NTL_clean = Merged_data_NTL_clean %>% 
+  mutate(income_business = ifelse(income_business <= 1000, "<1000", ifelse(income_business>1000 & income_business<=5000, "1,000-5,000", ifelse(income_business >5000 & income_business<=10000, "5,000-10,000", ifelse(income_business>10000 & income_business<=50000, "10,000-50,000", ifelse(income_business>50000 & income_business <= 100000, "50,000-100,000", ifelse(income_business>100000, ">100,000", ifelse(is.na(income_business)== T, "not mentioned", "---"))))))))
+Merged_data_NTL_clean = Merged_data_NTL_clean %>% 
+  mutate(income_savings = ifelse(income_savings <= 1000, "<1000", ifelse(income_savings>1000 & income_savings<=5000, "1,000-5,000", ifelse(income_savings >5000 & income_savings<=10000, "5,000-10,000", ifelse(income_savings>10000 & income_savings<=50000, "10,000-50,000", ifelse(income_savings>50000 & income_savings <= 100000, "50,000-100,000", ifelse(income_savings>100000, ">100,000", ifelse(is.na(income_savings)== T, "not mentioned", "---"))))))))
+Merged_data_NTL_clean = Merged_data_NTL_clean %>% 
+  mutate(income_government = ifelse(income_government <= 1000, "<1000", ifelse(income_government>1000 & income_government<=5000, "1,000-5,000", ifelse(income_government >5000 & income_government<=10000, "5,000-10,000", ifelse(income_government>10000 & income_government<=50000, "10,000-50,000", ifelse(income_government>50000 & income_government <= 100000, "50,000-100,000", ifelse(income_government>100000, ">100,000", ifelse(is.na(income_government)== T, "not mentioned", "---"))))))))
+Merged_data_NTL_clean = Merged_data_NTL_clean %>% 
+  mutate(income_remittances = ifelse(income_remittances <= 1000, "<1000", ifelse(income_remittances>1000 & income_remittances<=5000, "1,000-5,000", ifelse(income_remittances >5000 & income_remittances<=10000, "5,000-10,000", ifelse(income_remittances>10000 & income_remittances<=50000, "10,000-50,000", ifelse(income_remittances>50000 & income_remittances <= 100000, "50,000-100,000", ifelse(income_remittances>100000, ">100,000", ifelse(is.na(income_remittances)== T, "not mentioned", "---"))))))))
+Merged_data_NTL_clean = Merged_data_NTL_clean %>% 
+  mutate(income_support_family = ifelse(income_support_family <= 1000, "<1000", ifelse(income_support_family>1000 & income_support_family<=5000, "1,000-5,000", ifelse(income_support_family >5000 & income_support_family<=10000, "5,000-10,000", ifelse(income_support_family>10000 & income_support_family<=50000, "10,000-50,000", ifelse(income_support_family>50000 & income_support_family <= 100000, "50,000-100,000", ifelse(income_support_family>100000, ">100,000", ifelse(is.na(income_support_family)== T, "not mentioned", "---"))))))))
+Merged_data_NTL_clean = Merged_data_NTL_clean %>% 
+  mutate(income_humanitarian_assistance = ifelse(income_humanitarian_assistance <= 1000, "<1000", ifelse(income_humanitarian_assistance>1000 & income_humanitarian_assistance<=5000, "1,000-5,000", ifelse(income_humanitarian_assistance >5000 & income_humanitarian_assistance<=10000, "5,000-10,000", ifelse(income_humanitarian_assistance>10000 & income_humanitarian_assistance<=50000, "10,000-50,000", ifelse(income_humanitarian_assistance>50000 & income_humanitarian_assistance <= 100000, "50,000-100,000", ifelse(income_humanitarian_assistance>100000, ">100,000", ifelse(is.na(income_humanitarian_assistance)== T, "not mentioned", "---"))))))))
+Merged_data_NTL_clean = Merged_data_NTL_clean %>% 
+  mutate(income_donations = ifelse(income_donations <= 1000, "<1000", ifelse(income_donations>1000 & income_donations<=5000, "1,000-5,000", ifelse(income_donations >5000 & income_donations<=10000, "5,000-10,000", ifelse(income_donations>10000 & income_donations<=50000, "10,000-50,000", ifelse(income_donations>50000 & income_donations <= 100000, "50,000-100,000", ifelse(income_donations>100000, ">100,000", ifelse(is.na(income_donations)== T, "not mentioned", "---"))))))))
+Merged_data_NTL_clean = Merged_data_NTL_clean %>% 
+  mutate(total_income = ifelse(total_income <= 1000, "<1000", ifelse(total_income>1000 & total_income<=5000, "1,000-5,000", ifelse(total_income >5000 & total_income<=10000, "5,000-10,000", ifelse(total_income>10000 & total_income<=50000, "10,000-50,000", ifelse(total_income>50000 & total_income <= 100000, "50,000-100,000", ifelse(total_income>100000, ">100,000", ifelse(is.na(total_income)== T, "not mentioned", "---"))))))))
+  
+Merged_data_NTL_clean[["income_daily_labor"]][is.na(Merged_data_NTL_clean[["income_daily_labor"]])] <- "N/A"
+Merged_data_NTL_clean[["income_donations"]][is.na(Merged_data_NTL_clean[["income_donations"]])] <- "N/A"
+Merged_data_NTL_clean[["income_humanitarian_assistance"]][is.na(Merged_data_NTL_clean[["income_humanitarian_assistance"]])] <- "N/A"
+Merged_data_NTL_clean[["income_support_family"]][is.na(Merged_data_NTL_clean[["income_support_family"]])] <- "N/A"
+Merged_data_NTL_clean[["income_remittances"]][is.na(Merged_data_NTL_clean[["income_remittances"]])] <- "N/A"
+Merged_data_NTL_clean[["income_formal_work"]][is.na(Merged_data_NTL_clean[["income_formal_work"]])] <- "N/A"
+Merged_data_NTL_clean[["income_business"]][is.na(Merged_data_NTL_clean[["income_business"]])] <- "N/A"
+Merged_data_NTL_clean[["income_savings"]][is.na(Merged_data_NTL_clean[["income_savings"]])] <- "N/A"
+Merged_data_NTL_clean[["income_government"]][is.na(Merged_data_NTL_clean[["income_government"]])] <- "N/A"
+Merged_data_NTL_clean[["total_income"]][is.na(Merged_data_NTL_clean[["total_income"]])] <- "N/A"
+
+
+Merged_data_NTL_clean = Merged_data_NTL_clean %>% 
+  mutate(expenses_rent = ifelse(expenses_rent <= 500, "<500", ifelse(expenses_rent>500 & expenses_rent<=1500, "500-1,500", ifelse(expenses_rent >1500 & expenses_rent<=3000, "1,500-3,000", ifelse(expenses_rent>3000 & expenses_rent<=7500, "3,000-7,500", ifelse(expenses_rent>7500 & expenses_rent <= 10000, "7,500-10,000", ifelse(expenses_rent>10000 & expenses_rent <= 15000, "10,000-15000", ifelse(is.na(expenses_rent)== T, "not mentioned", "---"))))))))
+Merged_data_NTL_clean = Merged_data_NTL_clean %>% 
+  mutate(expenses_food = ifelse(expenses_food <= 500, "<500", ifelse(expenses_food>500 & expenses_food<=1500, "500-1,500", ifelse(expenses_food >1500 & expenses_food<=3000, "1,500-3,000", ifelse(expenses_food>3000 & expenses_food<=7500, "3,000-7,500", ifelse(expenses_food>7500 & expenses_food <= 10000, "7,500-10,000", ifelse(expenses_food>10000 & expenses_food <= 15000, "10,000-15000", ifelse(is.na(expenses_food)== T, "not mentioned", "---"))))))))
+Merged_data_NTL_clean = Merged_data_NTL_clean %>% 
+  mutate(expenses_water = ifelse(expenses_water <= 500, "<500", ifelse(expenses_water>500 & expenses_water<=1500, "500-1,500", ifelse(expenses_water >1500 & expenses_water<=3000, "1,500-3,000", ifelse(expenses_water>3000 & expenses_water<=7500, "3,000-7,500", ifelse(expenses_water>7500 & expenses_water <= 10000, "7,500-10,000", ifelse(expenses_water>10000 & expenses_water <= 15000, "10,000-15000", ifelse(is.na(expenses_water)== T, "not mentioned", "---"))))))))
+Merged_data_NTL_clean = Merged_data_NTL_clean %>% 
+  mutate(expenses_nonfood = ifelse(expenses_nonfood <= 500, "<500", ifelse(expenses_nonfood>500 & expenses_nonfood<=1500, "500-1,500", ifelse(expenses_nonfood >1500 & expenses_nonfood<=3000, "1,500-3,000", ifelse(expenses_nonfood>3000 & expenses_nonfood<=7500, "3,000-7,500", ifelse(expenses_nonfood>7500 & expenses_nonfood <= 10000, "7,500-10,000", ifelse(expenses_nonfood>10000 & expenses_nonfood <= 15000, "10,000-15000", ifelse(is.na(expenses_nonfood)== T, "not mentioned", "---"))))))))
+Merged_data_NTL_clean = Merged_data_NTL_clean %>% 
+  mutate(expenses_utilities = ifelse(expenses_utilities <= 500, "<500", ifelse(expenses_utilities>500 & expenses_utilities<=1500, "500-1,500", ifelse(expenses_utilities >1500 & expenses_utilities<=3000, "1,500-3,000", ifelse(expenses_utilities>3000 & expenses_utilities<=7500, "3,000-7,500", ifelse(expenses_utilities>7500 & expenses_utilities <= 10000, "7,500-10,000", ifelse(expenses_utilities>10000 & expenses_utilities <= 15000, "10,000-15000", ifelse(is.na(expenses_utilities)== T, "not mentioned", "---"))))))))
+Merged_data_NTL_clean = Merged_data_NTL_clean %>% 
+  mutate(expenses_fuel = ifelse(expenses_fuel <= 500, "<500", ifelse(expenses_fuel>500 & expenses_fuel<=1500, "500-1,500", ifelse(expenses_fuel >1500 & expenses_fuel<=3000, "1,500-3,000", ifelse(expenses_fuel>3000 & expenses_fuel<=7500, "3,000-7,500", ifelse(expenses_fuel>7500 & expenses_fuel <= 10000, "7,500-10,000", ifelse(expenses_fuel>10000 & expenses_fuel <= 15000, "10,000-15000", ifelse(is.na(expenses_fuel)== T, "not mentioned", "---"))))))))
+Merged_data_NTL_clean = Merged_data_NTL_clean %>% 
+  mutate(expenses_transport = ifelse(expenses_transport <= 500, "<500", ifelse(expenses_transport>500 & expenses_transport<=1500, "500-1,500", ifelse(expenses_transport >1500 & expenses_transport<=3000, "1,500-3,000", ifelse(expenses_transport>3000 & expenses_transport<=7500, "3,000-7,500", ifelse(expenses_transport>7500 & expenses_transport <= 10000, "7,500-10,000", ifelse(expenses_transport>10000 & expenses_transport <= 15000, "10,000-15000", ifelse(is.na(expenses_transport)== T, "not mentioned", "---"))))))))
+Merged_data_NTL_clean = Merged_data_NTL_clean %>% 
+  mutate(expenses_communication = ifelse(expenses_communication <= 500, "<500", ifelse(expenses_communication>500 & expenses_communication<=1500, "500-1,500", ifelse(expenses_communication >1500 & expenses_communication<=3000, "1,500-3,000", ifelse(expenses_communication>3000 & expenses_communication<=7500, "3,000-7,500", ifelse(expenses_communication>7500 & expenses_communication <= 10000, "7,500-10,000", ifelse(expenses_communication>10000 & expenses_communication <= 15000, "10,000-15000", ifelse(is.na(expenses_communication)== T, "not mentioned", "---"))))))))
+Merged_data_NTL_clean = Merged_data_NTL_clean %>% 
+  mutate(total_expense = ifelse(total_expense <= 500, "<500", ifelse(total_expense>500 & total_expense<=1500, "500-1,500", ifelse(total_expense >1500 & total_expense<=3000, "1,500-3,000", ifelse(total_expense>3000 & total_expense<=7500, "3,000-7,500", ifelse(total_expense>7500 & total_expense <= 10000, "7,500-10,000", ifelse(total_expense>10000 & total_expense <= 15000, "10,000-15000", NA)))))))
+
+
+Merged_data_NTL_clean[["expenses_food"]][is.na(Merged_data_NTL_clean[["expenses_food"]])] <- "N/A"
+Merged_data_NTL_clean[["expenses_water"]][is.na(Merged_data_NTL_clean[["expenses_water"]])] <- "N/A"
+Merged_data_NTL_clean[["expenses_nonfood"]][is.na(Merged_data_NTL_clean[["expenses_nonfood"]])] <- "N/A"
+Merged_data_NTL_clean[["expenses_utilities"]][is.na(Merged_data_NTL_clean[["expenses_utilities"]])] <- "N/A"
+Merged_data_NTL_clean[["expenses_fuel"]][is.na(Merged_data_NTL_clean[["expenses_fuel"]])] <- "N/A"
+Merged_data_NTL_clean[["expenses_transport"]][is.na(Merged_data_NTL_clean[["expenses_transport"]])] <- "N/A"
+Merged_data_NTL_clean[["expenses_communication"]][is.na(Merged_data_NTL_clean[["expenses_communication"]])] <- "N/A"
+Merged_data_NTL_clean[["expenses_rent"]][is.na(Merged_data_NTL_clean[["expenses_rent"]])] <- "N/A"
+Merged_data_NTL_clean[["total_expense"]][is.na(Merged_data_NTL_clean[["total_expense"]])] <- "N/A"
+
+
+Merged_data_NTL_clean = Merged_data_NTL_clean %>% 
+  drop_na(Return_Ukraine)
+
 ```
 
 Our response variable is whether the individual plans to return to Ukraine or not. If the respondent intends to return to Ukraine (whether to their home oblast or other), the response was recorded as a "yes" (1); if the respondent plans on staying in Moldova or moving to a different country, the response was recorded as "no" (0). Using this criteria, 553 respondents do not plan to return to Ukraine, 73 do plan to return to Ukraine, and 78 either didn't respond or did not know.
+
+As seen in Figure 1, although there are very few data entries that were not N/A for business income values, we can see that mid-level incomes correlated with a great number of respondents noting that they intended to return to Ukraine. Such finding may suggest that moderately successful business owners may want to continue way of life where as wealthier, more secure individuals feel more comfortable leaving. Similar to business income, there are very few data for salaried income. In fact, there are only 2 respondents that have salary data and repsponded that they plan to return to Ukraine. These findings motivate us to be cautious if including these variables in the model as there is not much data.
+
+
+```{r}
+Merged_data_NTL_clean$income_business <- factor(Merged_data_NTL_clean$income_business, levels=c('1,000-5,000', '5,000-10,000', '10,000-50,000', 'N/A'))
+
+p1 = ggplot(data = mutate(subset(Merged_data_NTL_clean,income_business != 'N/A' ), Return_Ukraine = ifelse(Return_Ukraine == 1, "Yes", "No"))) + geom_bar(aes(x= income_business, fill = Return_Ukraine)) + labs(title = "Business ", x = "Business Income (lei)")+ guides(fill=guide_legend(title="Return to UKR"))
+
+check = Merged_data_NTL_clean
+Merged_data_NTL_clean$income_formal_work <- factor(Merged_data_NTL_clean$income_formal_work, levels=c('<1000', '1,000-5,000','5,000-10,000', '10,000-50,000', 'N/A'))
+
+p2 = ggplot(data = mutate(subset(Merged_data_NTL_clean, income_formal_work != 'N/A' ), Return_Ukraine = ifelse(Return_Ukraine == 1, "Yes", "No"))) + geom_bar(aes(x= income_formal_work, fill = Return_Ukraine)) + labs(title = "Salary", x = "Salary Income (lei)")+ guides(fill=guide_legend(title="Return to UKR"))
+
+grid.arrange(p1, p2, top=textGrob("Figure 1: Income Distributions by Return Decision"))
+```
+
+
+```{r}
+Merged_data_NTL_clean$income_government <- factor(Merged_data_NTL_clean$income_government, levels=c('<1000', '1,000-5,000', '5,000-10,000', '10,000-50,000', 'N/A'))
+
+a1 = ggplot(data = mutate(subset(Merged_data_NTL_clean,income_government != 'N/A' ), Return_Ukraine = ifelse(Return_Ukraine == 1, "Yes", "No"))) + geom_bar(aes(x= income_government, fill = Return_Ukraine)) + labs(title = "Government Benefits", x = "Government Benefits Income (lei)")+ guides(fill=guide_legend(title="Return to UKR"))
+
+Merged_data_NTL_clean$income_remittances <- factor(Merged_data_NTL_clean$income_remittances, levels=c('<1000', '1,000-5,000', '5,000-10,000', '10,000-50,000', 'N/A'))
+a2 = ggplot(data = mutate(subset(Merged_data_NTL_clean, income_remittances != 'N/A' ), Return_Ukraine = ifelse(Return_Ukraine == 1, "Yes", "No"))) + geom_bar(aes(x= income_remittances, fill = Return_Ukraine)) + labs(title = "Remittances", x = "Remittances Income")+ guides(fill=guide_legend(title="Return to UKR"))
+
+Merged_data_NTL_clean$income_donations <- factor(Merged_data_NTL_clean$income_donations, levels=c('<1000', '1,000-5,000', '5,000-10,000', 'N/A'))
+a3 = ggplot(data = mutate(subset(Merged_data_NTL_clean, income_donations != 'N/A' ), Return_Ukraine = ifelse(Return_Ukraine == 1, "Yes", "No"))) + geom_bar(aes(x= income_donations, fill = Return_Ukraine)) + labs(title = "Donations", x = "Donations Income")+ guides(fill=guide_legend(title="Return to UKR"))
+
+grid.arrange(a1, a2, a3, top=textGrob("Figure 2: Income Distributions by Return Decision"))
+```
+
+```{r}
+Merged_data_NTL_clean = (subset(Merged_data_NTL_clean, infant_hh != 'dont_know' ))
+ggplot(data = mutate(Merged_data_NTL_clean, Return_Ukraine = ifelse(Return_Ukraine == 1, "Yes", "No"))) + geom_bar(aes(x= infant_hh, fill = Return_Ukraine)) + labs(title = "Infant in Respondent's Family by Return Decision", x = "Has Infant")+ guides(fill=guide_legend(title="Return to UKR"))
+```
+
+```{r}
+ggplot(data = mutate(Merged_data_NTL_clean, Return_Ukraine = ifelse(Return_Ukraine == 1, "Yes", "No"))) + geom_boxplot(aes(x= mean_4, fill = Return_Ukraine)) + labs(title = "Business Income Distribution by Return Decision")+ guides(fill=guide_legend(title="Return to UKR"))
+
+look1 = subset(Merged_data_NTL_clean, mean_4 > 300)
+```
+Arrival in March
+household number is the number of people in the Moldovan household. hh_family_size is the number of people in the respondent's family.
+
+# Included Variables
+
+* Location - The current location of the respondent in Moldova (Chisinau, Bender, Balti, or Transnistria)
+
+* Language preferences - binary variables indicating if the speaker prefers Romanian, Russian, or Ukrainian
+
+* The age of the speaker
+
+* Household accomodations - where the respondent is currently staying (hotel, with relatives, accredited refugee accomodation center (RAC), etc.)
+
+* Origin Ukrainian oblast
+
+* Binary representing whether, after the start of the war, did the respondent have to move to another place in Ukraine before coming to Moldova.
+
+* Conditions the respondent would need to change in Ukraine before you decided to return? 
+
+* Number of people in the respondent's family
+
+* Binary variable indicating if, since arriving to Moldova, has the respondent applied to enroll their child in school/kindergarten in Moldova? 
+
+* Number of people in the Moldovan household the respondent is staying in
+
+* Marital status of the household host
+
+* Binary representing if any member in the respondent's family (Ukrainian) is six months of age or younger?
+
+* Binary variables indicating if the following items are limited: adult clothing, basic hygiene, beds, heaters, children clothing, diapers, or menstrual materials.
+
+* Highest level of education attained by the head of respondent's family
+
+* Whether or not the respondent needs to learn / improve a language to integrate in Moldova work market
+
+* Occupation before the war began
+
+* Sector of occupation before the war began
+
+* If the respondent is in the same occupation since arriving in Moldova
+
+* The respondents current occupation
+
+* If the respondent needed to sell household assets/goods (radio/furniture/TV...)
+
+* If the respondent needed to withdraw children from school
+
+* If the respondent needed to sell their house/land 
+
+* Income from salary work, daily labor, personal business, savings/pension, government benefits, remittances, support from friends and family, donations, and humanitarian assistance
+
+* Expense amount on food, rent, water, non-food household items (hygiene, lightbulbs, etc), utilities, fuel (for cooking, vehicles, etc.), transportation, and communication
+
+* Indicator whether or not every person in the respondent's family has an ID document (national ID and/or passport)?
+
+* Indicator whether or not the respondent or anyone in their family experienced what discriminatory treatment since arriving to Moldova?
+
+* The month and the year of the respondent's arrival into Moldova
+
+* The month and year which the interview took place
+
+* Number of days between the arrival and interview
+
+* The following are "hits" from google trends. Each trend was measured from 2018 to the end of 2022. The "hits" represent a normalized distribution of "hits" of a certain topic. These numbers don't represent absolute search volume numbers, because the data is normalized and presented on a scale from 0-100, where each point on the graph is divided by the highest point, or 100. A lower number of "hits" means that a search term's relative popularity is decreasing—not necessarily that the total number of searches for that term is decreasing, but that its popularity compared to other searches is shrinking. This "hits" value was found for both the month of the respondent's arrival (taken as an average of weeks within the month) as well a month before the respondent's arrival. Using this criteria, the following topics are included:
+  
+  ** Travel
+  ** Holiday
+  ** Labor
+  ** Unemployment
+  ** Loan
+  ** Washing Machine
+  ** Fridge
+  ** BMW
+  ** Mercedes 
+  ** Fashion
+  
+* We will also be using night light data (snow adjusted) from the month of the arrival of the respondent. The following metrics will be used:
+  ** Maximum
+  ** Mean
+  ** Sum
+  ** Standard Deviation
+  
+* In addition to this nightlight data, percent changes of the these metrics from the previous month will be used
+  
+```{r}
+
+model_data <- Merged_data_NTL_clean %>%
+  drop_na(location) %>% 
+  subset(select = c(Return_Ukraine, language_pref_ukrainian , language_pref_russian , income_formal_work, total_expense, total_income,  ))
+
+full_model = glm(Return_Ukraine ~ ., family = binomial, data = model_data)
+
+```
+
+So little data on income so producing results that converge to 1 or 0
+
+
+displacement_return + 
+
+infant_hh + hoh_education + language_preference_need +  hoh_occupation + sum_4+ std_4 + lag_max_4 + lag_mean_4 + lag_sum_4+ hh_id_available +  hh_discrimination_md + arrival_month + diff_in_days + Travel + lag_Travel + Unemployment + lag_Unemployment
+
++location + displacement_secondary+ hoh_host_marital + infant_hh + hoh_education + language_preference_need +  hoh_occupation 
+
++ hoh_ua_occupation_same  +  +income_daily_labor +  income_business + income_savings + max_4 + mean_4  +perc_change_max + perc_change_mean + perc_change_sum + basic_hygiene_limited  + expenses_rent + lag_Travel + Travel
+
+hh_family_size + age_speaker+ 
+
+
+ +language_pref_romana + Adult_clothing_limited  + beds_limited + children_clothing_limited + diapers_limited + heater_limited + kitchen_set_limited + menstrual_mat_limited +  none_limited + hoh_current_occupation + csi_sold_assets + csi_spent_savings + csi_withdrew_children + csi_sold_house  + income_government + income_remittances + income_support_family + income_humanitarian_assistance + income_donations + expenses_food +  + expenses_water + expenses_nonfood +expenses_utilities + expenses_fuel + expenses_transport +expenses_communication + hh_id_available +  hh_discrimination_md + arrival_month + diff_in_days  +  + lag_Holiday + lag_Labor + lag_Unemployment + lag_Loan + lag_Washing_machine + lag_Fridge + lag_BMW + lag_Mercedes + lag_Fashion  , family = binomial
+
+
+```{r}
+model_final <- tidy(full_model) %>%
+  dplyr::select(-statistic) %>%
+  mutate(`Confidence (2.5%)` = exp(estimate - ((1.96)*std.error)),
+         `Confidence (97.5%)` = exp(estimate + ((1.96)*std.error)),
+         Significant = ifelse(p.value < 0.1, "Yes", "No"),
+         `P-Value` = ifelse(p.value<0.001, "<0.001", paste("","",format(round(p.value,3), nsmall = 3), sep = "&nbsp;"))) %>%
+  dplyr::select(-std.error, -p.value) %>%
+  mutate(estimate = exp(estimate)) %>%
+  relocate(term,estimate,`Confidence (2.5%)`,`Confidence (97.5%)`,`P-Value`)
+```
+
+
+```{r}
+model_final
+```
+
+ %>%
+  mutate(Variable = case_when(
+    Variable == "(Intercept)" ~ "Intercept",
+    Variable == "call_madeTrue" ~ "Call Made (vs. not)",
+    Variable == "close_gameTrue" ~ "Close Game Based on Final Score (vs. not)",
+    Variable == "sec_left" ~ "Seconds Left @ Time of Play",
+    Variable == "counting" ~ "Number of Calls Made So Far in L2M",
+    Variable == "periodOvertime" ~ "Overtime (vs. Regular Time)",
+    Variable == "playoffTrue" ~ "Playoff Game (vs. Not)",
+    Variable == "starTrue" ~ "Committing Player is a Star (vs. Not)",
+    Variable == "call_typeFoul: Offensive" ~ "Offensive Foul Call (vs. Travelling Turnover Call)",
+    Variable == "call_typeFoul: Personal" ~ "Personal Foul Call (vs. Travelling Turnover Call)",
+    Variable == "call_typeFoul: Shooting" ~ "Shooting Foul Call (vs. Travelling Turnover Call)",
+    Variable == "call_typeFoul: Loose Ball" ~ "Loose Ball Foul Call (vs. Travelling Turnover Call)",
+    Variable == "committing_min_played" ~ "Minutes Played by Committing Player",
+    Variable == "committing_sidehome" ~ "Committing Player on Home Team (vs. Away Team)",
+    Variable == "James.Capers.Jr." ~ "James Capers Jr. Reffing (vs. David Jones Reffing)",
+    Variable == "disadvantaged_min_played" ~ "Minutes Played by Disadvantaged Player",
+    Variable == "Ron.Garretson" ~ "Ron Garretson Reffing (vs. David Jones Reffing)",
+    Variable == "Tony.Brown" ~ "Tony Brown Reffing (vs. David Jones Reffing)",
+    Variable == "Nick.Buchert" ~ "Nick Buchert Reffing (vs. David Jones Reffing)",
+    Variable == "Josh.Tiven" ~ "Josh Tiven Reffing (vs. David Jones Reffing)",
+    Variable == "Derek.Richardson" ~ "Derek Richardson Reffing (vs. David Jones Reffing)",
+    Variable == "Courtney.Kirkland" ~ "Courtney Kirkland Reffing (vs. David Jones Reffing)",
+    Variable == "Curtis.Blair" ~ "Curtis Blair Reffing (vs. David Jones Reffing)",
+    Variable == "Karl.Lane" ~ "Karl Lane Reffing (vs. David Jones Reffing)",
+    Variable == "Scott.Foster" ~ "Scott Foste
+
+
+
+
+
+```{r}
+look= subset(Merged_data_NTL_clean, select = c(Return_Ukraine,household_number))
+```
+
+
+```{r}
+sapply(lapply(Merged_data_NTL_clean, unique), length)
+```
+
+
+
+```{r}
+write.csv(Merged_data_NTL_clean, file = "/Users/jessiebierschenk/Cossack Collectors/Merged_data_NTL_clean", row.names=FALSE)
+
+```
+
+
+
+
+Probit/logit
+maybe try - random forests
 
