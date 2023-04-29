@@ -1,7 +1,8 @@
 ---
-title: "Modeling_copy"
-output: html_document
-date: "2023-04-20"
+title: "Modeling Analysis"
+output:
+  pdf_document: default
+date: "2023-04-29"
 ---
 
 ```{r setup, include=FALSE}
@@ -20,6 +21,24 @@ library(gridExtra)
 library(grid)
 library(lubridate)
 library(ggplot2)
+library(glmnet)
+library(MASS)
+library(tidyverse)
+library(lubridate)
+library(stringr)
+library(rvest)
+library(MASS)
+library(nnet)
+library(broom)
+library(knitr)
+library(car)
+library(Stat2Data)
+library(scales)
+library(gridExtra)
+library(grid)
+library(kableExtra)
+
+knitr::opts_chunk$set(echo=FALSE, warning = FALSE)
 ```
 
 ```{r}
@@ -76,86 +95,92 @@ UNHCR_clean$month_lag = as.numeric(UNHCR_clean$month_lag)
 
 ```
 
-# Google Trends Scraping
 ```{r}
-gt_time <- '2018-01-01 2022-12-31'
-gt_regions <- c('MD-BA', 'MD-BD', 'MD-CU', 'MD-SN')
-gt_topic_codes <- c('/m/014dsx', '/m/03gkl', '/g/122h6md7', '/m/07s_c','/m/01dnzs', '/m/0174k2', '/m/040b_t' )
-gt_topic_names <- c('Travel', 'Holiday', 'Labor', 'Unemployment', 'Loan', 'Washing_machine', 'Fridge')
-gt_waiting_time <- 30
+# Google Trends Scraping
 
-# create an empty dataframe to store all datasets
-Mdata1 <- data.frame(matrix(ncol = 7, nrow = 0))
-
-# use for loop to scrape data 
-for (i in 1:length(gt_regions)){
-  for (j in 1:length(gt_topic_codes)){
-    temp <- gtrends(gt_topic_codes[j], geo = gt_regions[i], time = gt_time)
-    temp <- temp[["interest_over_time"]]
-    temp["keyword"][temp["keyword"] == gt_topic_codes[j]] =  gt_topic_names[j]
-    Mdata1 <- rbind(Mdata1, temp)
-    Sys.sleep(gt_waiting_time)
-  }
-}
+# gt_time <- '2018-01-01 2022-12-31'
+# gt_regions <- c('MD-BA', 'MD-BD', 'MD-CU', 'MD-SN')
+# gt_topic_codes <- c('/m/014dsx', '/m/03gkl', '/g/122h6md7', '/m/07s_c','/m/01dnzs', '/m/0174k2', '/m/040b_t' )
+# gt_topic_names <- c('Travel', 'Holiday', 'Labor', 'Unemployment', 'Loan', 'Washing_machine', 'Fridge')
+# gt_waiting_time <- 30
+# 
+# # create an empty dataframe to store all datasets
+# Mdata1 <- data.frame(matrix(ncol = 7, nrow = 0))
+# 
+# # use for loop to scrape data 
+# for (i in 1:length(gt_regions)){
+#   for (j in 1:length(gt_topic_codes)){
+#     temp <- gtrends(gt_topic_codes[j], geo = gt_regions[i], time = gt_time)
+#     temp <- temp[["interest_over_time"]]
+#     temp["keyword"][temp["keyword"] == gt_topic_codes[j]] =  gt_topic_names[j]
+#     Mdata1 <- rbind(Mdata1, temp)
+#     Sys.sleep(gt_waiting_time)
+#   }
+# }
 ```
 
 
 ```{r}
-gt_time <- '2018-01-01 2022-12-31'
-gt_regions <- c('MD-BA', 'MD-BD', 'MD-CU', "MD-SN")
-gt_topic_codes <- c( '/m/0h6dlrc', '/m/0h5wpdf', '/m/032tl')
-gt_topic_names <- c( 'BMW', 'Mercedes', 'Fashion' )
-gt_waiting_time <- 30
-
-# create an empty dataframe to store all datasets
-Mdata3 <- data.frame(matrix(ncol = 7, nrow = 0))
-
-# use for loop to scrape data 
-for (i in 1:length(gt_regions)){
-  for (j in 1:length(gt_topic_codes)){
-    temp <- gtrends(gt_topic_codes[j], geo = gt_regions[i], time = gt_time)
-    temp <- temp[["interest_over_time"]]
-    temp["keyword"][temp["keyword"] == gt_topic_codes[j]] =  gt_topic_names[j]
-    Mdata3 <- rbind(Mdata3, temp)
-    Sys.sleep(gt_waiting_time)
-  }
-}
+# gt_time <- '2018-01-01 2022-12-31'
+# gt_regions <- c('MD-BA', 'MD-BD', 'MD-CU', "MD-SN")
+# gt_topic_codes <- c( '/m/0h6dlrc', '/m/0h5wpdf', '/m/032tl')
+# gt_topic_names <- c( 'BMW', 'Mercedes', 'Fashion' )
+# gt_waiting_time <- 30
+# 
+# # create an empty dataframe to store all datasets
+# Mdata3 <- data.frame(matrix(ncol = 7, nrow = 0))
+# 
+# # use for loop to scrape data 
+# for (i in 1:length(gt_regions)){
+#   for (j in 1:length(gt_topic_codes)){
+#     temp <- gtrends(gt_topic_codes[j], geo = gt_regions[i], time = gt_time)
+#     temp <- temp[["interest_over_time"]]
+#     temp["keyword"][temp["keyword"] == gt_topic_codes[j]] =  gt_topic_names[j]
+#     Mdata3 <- rbind(Mdata3, temp)
+#     Sys.sleep(gt_waiting_time)
+#   }
+# }
 
 ```
 
 
 ```{r}
 # Make giant data set
-Mtrends_data2 = rbind(Mdata1, Mdata3 )
-Mtrends_data2 = distinct(Mtrends_data2)
-
-# change the <1 to 0s
- Mtrends_data2 <- data.frame(lapply(Mtrends_data2, function(x) {
-                  gsub("<1", "0.5", x)
-              }))
+# Mtrends_data2 = rbind(Mdata1, Mdata3 )
+# Mtrends_data2 = distinct(Mtrends_data2)
+# 
+# # change the <1 to 0s
+#  Mtrends_data2 <- data.frame(lapply(Mtrends_data2, function(x) {
+#                   gsub("<1", "0.5", x)
+#               }))
 ```
 
 ```{r}
-write.csv(Mtrends_data2, file = "/Users/jessiebierschenk/Cossack Collectors/Mtrends_data2.csv", row.names=FALSE)
+#write.csv(Mtrends_data2, file = "/Users/jessiebierschenk/Cossack Collectors/Mtrends_data2.csv", row.names=FALSE)
 ```
 
 ```{r}
-#view(Mtrends_data2)
+
+Mtrends_data2 = read.csv("Mtrends_data2.csv")
+view(Mtrends_data2)
+
+
+
 Mtrends_data2= Mtrends_data2 %>% 
   mutate(name = ifelse(geo == 'MD-BA', "Balti", ifelse( geo == 'MD-BD', "Bender", ifelse(geo== "MD-CU", "Chisinau", ifelse(geo == "MD", "Moldova", "Transnistria")))))
 
-Mtrends_data2$hits = as.numeric(Mtrends_data2$hits)
-
-Mtrends_data2 =Mtrends_data2 %>% 
-  pivot_wider(names_from = keyword, values_from = hits)
-
-Mtrends_data2$date = as.Date(Mtrends_data2$date)
-
-Mtrends_data2$year = substr(Mtrends_data2$date, 1, 4)
-Mtrends_data2$year = as.numeric(Mtrends_data2$year)
-
-Mtrends_data2$month = format(as.Date(Mtrends_data2$date, format="%Y-%m-%d"),"%m")
-Mtrends_data2$month = as.numeric(Mtrends_data2$month)
+# Mtrends_data2$hits = as.numeric(Mtrends_data2$hits)
+# 
+# Mtrends_data2 =Mtrends_data2 %>% 
+#   pivot_wider(names_from = keyword, values_from = hits)
+# 
+# Mtrends_data2$date = as.Date(Mtrends_data2$date)
+# 
+# Mtrends_data2$year = substr(Mtrends_data2$date, 1, 4)
+# Mtrends_data2$year = as.numeric(Mtrends_data2$year)
+# 
+# Mtrends_data2$month = format(as.Date(Mtrends_data2$date, format="%Y-%m-%d"),"%m")
+# Mtrends_data2$month = as.numeric(Mtrends_data2$month)
 
 ```
 
@@ -308,7 +333,7 @@ Merged_data_NTL = left_join(Merged_data_NTL, NTL_up_clean_lag, by = c('arrival_y
 
 
 # clean the merged data so can better model
-Merged_data_NTL_clean$household_number = as.factor(Merged_data_NTL_clean$household_number)
+Merged_data_NTL$household_number = as.factor(Merged_data_NTL$household_number)
 Merged_data_NTL_clean = Merged_data_NTL %>% 
   mutate(household_number = ifelse(household_number ==1, "1", ifelse(household_number ==2, "2", ifelse(household_number == 3,"3", ifelse(household_number == 4, "4", ifelse(household_number >= 5, "5+", ifelse(is.na(household_number) == TRUE, "N/A", "N/A")))))))
 
@@ -390,12 +415,24 @@ Merged_data_NTL_clean = Merged_data_NTL_clean %>%
 
 ```
 
-Our response variable is whether the individual plans to return to Ukraine or not. If the respondent intends to return to Ukraine (whether to their home oblast or other), the response was recorded as a "yes" (1); if the respondent plans on staying in Moldova or moving to a different country, the response was recorded as "no" (0). Using this criteria, 553 respondents do not plan to return to Ukraine, 73 do plan to return to Ukraine, and 78 either didn't respond or did not know.
+# Introduction
 
-As seen in Figure 1, although there are very few data entries that were not N/A for business income values, we can see that mid-level incomes correlated with a great number of respondents noting that they intended to return to Ukraine. Such finding may suggest that moderately successful business owners may want to continue way of life where as wealthier, more secure individuals feel more comfortable leaving. Similar to business income, there are very few data for salaried income. In fact, there are only 2 respondents that have salary data and repsponded that they plan to return to Ukraine. These findings motivate us to be cautious if including these variables in the model as there is not much data.
+Given the background and information on refugee migration into Moldova from Ukraine, a questions arises: where will these refugees go in the near and far future? The respondent's intentions of their future migration plans is the primary focus of this analysis. We aim to address the question:
+
+**What factors are associated with a refugee's intention to either return to or leave Ukraine?**
+
+Given this intention, our response variable of interest is whether the individual plans to return to Ukraine or not. If the respondent intends to return to Ukraine (whether to their home oblast or other), the response was recorded as a "yes" (1); if the respondent plans on staying in Moldova or moving to a different country, the response was recorded as "no" (0). Using this criteria, 553 respondents do not plan to return to Ukraine, 73 do plan to return to Ukraine, and 78 either didn't respond or did not know. For the sake of this analysis, we will limit this scope to only respondents that responded yes or no. After accounting for missingness in other attributes associated with this study, there are 547 unique and complete observations in which we will explore. Eaxh observation represents the interview/survey of a unique Ukrainian refugee.
+
+To provide further detail on the variables of interest, exploratory data analysis can be seen below.
+
+# Exploratory Data Analysis
+
+To begin, we will observe the income distributions by return intentions for respondents. As seen in Figure 1, although there are very few data entries that were not N/A for business income values, we can see that mid-level incomes correlated with a great number of respondents noting that they intended to return to Ukraine. Such finding may suggest that moderately successful business owners may want to continue way of life where as wealthier, more secure individuals feel more comfortable leaving. Similar to business income, there are very few data for salaried income. In fact, there are only 2 respondents that have salary data and repsponded that they plan to return to Ukraine. These findings motivate us to be cautious if including these variables in the model as there is not much data.
+
+Figure 2 covers income categories that had more observations, such as income from government benefits, remittances, and donations, however, once again, there is little variation to be seen within income levels by return intention. Due to the low number of observations for each income category, in our modeling process, we will combine all income counts into a "total income" variable.
 
 
-```{r}
+```{r, fig.width=4, fig.height=4}
 Merged_data_NTL_clean$income_business <- factor(Merged_data_NTL_clean$income_business, levels=c('1,000-5,000', '5,000-10,000', '10,000-50,000', 'N/A'))
 
 p1 = ggplot(data = mutate(subset(Merged_data_NTL_clean,income_business != 'N/A' ), Return_Ukraine = ifelse(Return_Ukraine == 1, "Yes", "No"))) + geom_bar(aes(x= income_business, fill = Return_Ukraine)) + labs(title = "Business ", x = "Business Income (lei)")+ guides(fill=guide_legend(title="Return to UKR"))
@@ -403,99 +440,178 @@ p1 = ggplot(data = mutate(subset(Merged_data_NTL_clean,income_business != 'N/A' 
 check = Merged_data_NTL_clean
 Merged_data_NTL_clean$income_formal_work <- factor(Merged_data_NTL_clean$income_formal_work, levels=c('<1000', '1,000-5,000','5,000-10,000', '10,000-50,000', 'N/A'))
 
-p2 = ggplot(data = mutate(subset(Merged_data_NTL_clean, income_formal_work != 'N/A' ), Return_Ukraine = ifelse(Return_Ukraine == 1, "Yes", "No"))) + geom_bar(aes(x= income_formal_work, fill = Return_Ukraine)) + labs(title = "Salary", x = "Salary Income (lei)")+ guides(fill=guide_legend(title="Return to UKR"))
+p2 = ggplot(data = mutate(subset(Merged_data_NTL_clean, income_formal_work != 'N/A' ), Return_Ukraine = ifelse(Return_Ukraine == 1, "Yes", "No"))) + geom_bar(aes(x= income_formal_work, fill = Return_Ukraine), show.legend = FALSE) + labs(title = "Salary", x = "Salary Income (lei)")+ guides(fill=guide_legend(title="Return to UKR"))
 
 grid.arrange(p1, p2, top=textGrob("Figure 1: Income Distributions by Return Decision"))
 ```
 
 
-```{r}
+```{r, fig.width=5, fig.height=4}
 Merged_data_NTL_clean$income_government <- factor(Merged_data_NTL_clean$income_government, levels=c('<1000', '1,000-5,000', '5,000-10,000', '10,000-50,000', 'N/A'))
 
 a1 = ggplot(data = mutate(subset(Merged_data_NTL_clean,income_government != 'N/A' ), Return_Ukraine = ifelse(Return_Ukraine == 1, "Yes", "No"))) + geom_bar(aes(x= income_government, fill = Return_Ukraine)) + labs(title = "Government Benefits", x = "Government Benefits Income (lei)")+ guides(fill=guide_legend(title="Return to UKR"))
 
 Merged_data_NTL_clean$income_remittances <- factor(Merged_data_NTL_clean$income_remittances, levels=c('<1000', '1,000-5,000', '5,000-10,000', '10,000-50,000', 'N/A'))
-a2 = ggplot(data = mutate(subset(Merged_data_NTL_clean, income_remittances != 'N/A' ), Return_Ukraine = ifelse(Return_Ukraine == 1, "Yes", "No"))) + geom_bar(aes(x= income_remittances, fill = Return_Ukraine)) + labs(title = "Remittances", x = "Remittances Income")+ guides(fill=guide_legend(title="Return to UKR"))
+a2 = ggplot(data = mutate(subset(Merged_data_NTL_clean, income_remittances != 'N/A' ), Return_Ukraine = ifelse(Return_Ukraine == 1, "Yes", "No"))) + geom_bar(aes(x= income_remittances, fill = Return_Ukraine), show.legend = FALSE) + labs(title = "Remittances", x = "Remittances Income")+ guides(fill=guide_legend(title="Return to UKR"))
 
 Merged_data_NTL_clean$income_donations <- factor(Merged_data_NTL_clean$income_donations, levels=c('<1000', '1,000-5,000', '5,000-10,000', 'N/A'))
-a3 = ggplot(data = mutate(subset(Merged_data_NTL_clean, income_donations != 'N/A' ), Return_Ukraine = ifelse(Return_Ukraine == 1, "Yes", "No"))) + geom_bar(aes(x= income_donations, fill = Return_Ukraine)) + labs(title = "Donations", x = "Donations Income")+ guides(fill=guide_legend(title="Return to UKR"))
+a3 = ggplot(data = mutate(subset(Merged_data_NTL_clean, income_donations != 'N/A' ), Return_Ukraine = ifelse(Return_Ukraine == 1, "Yes", "No"))) + geom_bar(aes(x= income_donations, fill = Return_Ukraine), show.legend = FALSE) + labs(title = "Donations", x = "Donations Income")+ guides(fill=guide_legend(title="Return to UKR"))
 
 grid.arrange(a1, a2, a3, top=textGrob("Figure 2: Income Distributions by Return Decision"))
 ```
 
-```{r}
+An additional part of our analysis that we are concerned with is familial characteristics of respondents. Figure 3 below shows that respondents intending to return to Ukraine had smaller family sizes that respondent's that do not intend to return. The median family size for those that intend to return is 2 whereas the median family size for those that do not intend to return is 3. This may suggest that having more children is associated with the intention not to return to Ukraine.
+
+```{r, fig.width=5, fig.height=2.5}
+ggplot(data = mutate(Merged_data_NTL_clean, Return_Ukraine = ifelse(Return_Ukraine == 1, "Yes", "No"))) + geom_boxplot(aes(x= hh_family_size, fill = Return_Ukraine)) + labs(title = "Figure 3: Respondent's Family Size by Return Intention", x = "Members in Family")+ guides(fill=guide_legend(title="Return to UKR"))+ theme(axis.text.y=element_blank(),axis.ticks.y=element_blank())
+```
+
+Figure 4 below shows the distribution of the presence of a family member 6 months old or younger and shows the respective return intention. As seen below, less than 3.0% of respondents had an infant in their family. With such low presence, a lack of meaningful variation will keep us from including this variable in our modeling process, but it is still an interesting finding worth noting. 
+
+```{r, fig.width=5, fig.height=2}
 Merged_data_NTL_clean = (subset(Merged_data_NTL_clean, infant_hh != 'dont_know' ))
-ggplot(data = mutate(Merged_data_NTL_clean, Return_Ukraine = ifelse(Return_Ukraine == 1, "Yes", "No"))) + geom_bar(aes(x= infant_hh, fill = Return_Ukraine)) + labs(title = "Infant in Respondent's Family by Return Decision", x = "Has Infant")+ guides(fill=guide_legend(title="Return to UKR"))
+ggplot(data = mutate(Merged_data_NTL_clean, Return_Ukraine = ifelse(Return_Ukraine == 1, "Yes", "No"))) + geom_bar(aes(x= infant_hh, fill = Return_Ukraine)) + labs(title = "Figure 4: Infant in Respondent's Family by Return Decision", x = "Has Infant")+ guides(fill=guide_legend(title="Return to UKR"))
+```
+
+
+Figure 5 below shows that respondents that do not intend to return to Ukraine have a smaller range in distribution of the respondent's age. For those that do not intend to return the minimum age is lower and the maximum age is higher compared to the respective metrics of those that do intend to return. However, the median age of those not intending to return is lower than those who do intend to return.
+
+```{r,  fig.width=4, fig.height=3.5}
+ggplot(data = mutate(Merged_data_NTL_clean, Return_Ukraine = ifelse(Return_Ukraine == 1, "Yes", "No"))) + geom_boxplot(aes(x= age_speaker, fill = Return_Ukraine)) + labs(title = "Figure 5: Respondent's Age by Return Intention", x = "Age")+ guides(fill=guide_legend(title="Return to UKR"))+ theme(axis.text.y=element_blank(),axis.ticks.y=element_blank())
+```
+
+Figure 6 evidences another variable in which the highly saturated response negates it from our modeling analysis, but the findings are interesting nonetheless. This figure represents whether every member of ther respondent's family has a valid ID/passport. More than 90% of the respondents noted 'yes', and a higher proportion out of the 32 respondents that responded 'no' intend to return to Ukraine. This may suggest that a lack of ability to travel elsewhere is affecting their return plans.
+
+```{r,  fig.width=4, fig.height=4}
+r1 = ggplot(data = mutate(Merged_data_NTL_clean, Return_Ukraine = ifelse(Return_Ukraine == 1, "Yes", "No"))) + geom_bar(aes(x= hh_id_available, fill = Return_Ukraine), position = "fill") + labs(title = "Proportional", x = "Status", y = "Proportion")+ guides(fill=guide_legend(title="Return to UKR"))
+r3 = ggplot(data = mutate(Merged_data_NTL_clean, Return_Ukraine = ifelse(Return_Ukraine == 1, "Yes", "No"))) + geom_bar(aes(x= hh_id_available, fill = Return_Ukraine), show.legend = FALSE) + labs(title = "Total", x = "Status", y = "Count")+ guides(fill=guide_legend(title="Return to UKR"))
+
+grid.arrange(r1, r3, top = textGrob("Figure 6: Official ID available for entire family"))
+```
+
+Figure 7 below shows the highest education level of the respondent's household head by return intention proportion. Most respondents had a household head that had completed higher education. However, there is little significant vairation in proportion of return intention by educaiton type.
+
+```{r, fig.width=4, fig.height=2.5}
+
+Merged_data_NTL_clean$hoh_education[Merged_data_NTL_clean$hoh_education == "i_do_not_want_to_respond"] <- "no"
+Merged_data_NTL_clean$hoh_education[Merged_data_NTL_clean$hoh_education == "incomplete_higher_education"] <- "basic_higher"
+Merged_data_NTL_clean$hoh_education[Merged_data_NTL_clean$hoh_education == "primary_education"] <- "basic_secondary"
+Merged_data_NTL_clean$hoh_education[Merged_data_NTL_clean$hoh_education == "postgraduate"] <- "complete_higher"
+
+
+Merged_data_NTL_clean$hoh_education =  factor(Merged_data_NTL_clean$hoh_education, levels=c("i_do_not_want_to_respond", 'no', 'primary_education', 'basic_secondary', 'complete_secondary_vocational',"incomplete_higher_education", 'basic_higher', "complete_higher", "postgraduate" ))
+Merged_data_NTL_clean = (subset(Merged_data_NTL_clean, infant_hh != 'dont_know' ))
+q1 = ggplot(data = mutate(Merged_data_NTL_clean, Return_Ukraine = ifelse(Return_Ukraine == 1, "Yes", "No"))) + geom_bar(aes(x= hoh_education, fill = Return_Ukraine), position= "fill") + labs(title = "Proportional", x = "Education Level", y = "proportion")+ guides(fill=guide_legend(title="Return to UKR"))+ theme(axis.text.x=element_blank(),axis.ticks.x=element_blank())
+```
+
+```{r, fig.width=4, fig.height=7}
+q2 = ggplot(data = mutate(Merged_data_NTL_clean, Return_Ukraine = ifelse(Return_Ukraine == 1, "Yes", "No"))) + geom_bar(aes(x= hoh_education, fill = Return_Ukraine), show.legend = FALSE) + labs(title = "Total", x = "Education Level", y = "Count")+ guides(fill=guide_legend(title="Return to UKR"))+ theme(axis.text.x = element_text(angle = 30, vjust = 0.25, hjust=.5))
 ```
 
 ```{r}
-ggplot(data = mutate(Merged_data_NTL_clean, Return_Ukraine = ifelse(Return_Ukraine == 1, "Yes", "No"))) + geom_boxplot(aes(x= mean_4, fill = Return_Ukraine)) + labs(title = "Business Income Distribution by Return Decision")+ guides(fill=guide_legend(title="Return to UKR"))
+grid.arrange(q1, q2, top = textGrob("Figure 7: Education level by Return Decision"))
 
-look1 = subset(Merged_data_NTL_clean, mean_4 > 300)
 ```
-Arrival in March
-household number is the number of people in the Moldovan household. hh_family_size is the number of people in the respondent's family.
 
-# Included Variables
+
+Figure 8 represents the occupation changes in Ukrainian refugee respondents. While most of the respondents, as expected, are not currently in the same occupation since arriving to Moldova, a greater proportion of those that are intend to return to Moldova. This may suggest some sort of stability that draws them back to their home country. 
+
+```{r, fig.width=5, fig.height=2}
+Merged_data_NTL_clean$hoh_ua_occupation_same[Merged_data_NTL_clean$hoh_ua_occupation_same == "dont_know"]= "N/A"
+Merged_data_NTL_clean$hoh_ua_occupation_same[Merged_data_NTL_clean$hoh_ua_occupation_same == "prefer_not_to_answer"]= "N/A"
+
+ggplot(data = mutate(Merged_data_NTL_clean, Return_Ukraine = ifelse(Return_Ukraine == 1, "Yes", "No"))) + geom_bar(aes(x= hoh_ua_occupation_same, fill = Return_Ukraine), position='fill') + labs(title = "Figure 8: Respondent Has Maintained
+Same Occupation", x = "Status", y = "Count")+ guides(fill=guide_legend(title="Return to UKR"))
+```
+
+
+As seen in Figure 9 there is little difference in discrimination experience across respondents who intend versus do not intend to return to Ukraine. And there were few respondents who had faced any discrimination (< 10%).
+
+```{r, fig.width=3.5, fig.height=2.5}
+Merged_data_NTL_clean =  (subset(Merged_data_NTL_clean, hh_discrimination_md != 'dont_know' & hh_discrimination_md != 'prefer_not_to_answer' ))
+ggplot(data = mutate(Merged_data_NTL_clean, Return_Ukraine = ifelse(Return_Ukraine == 1, "Yes", "No"))) + geom_bar(aes(x= hh_discrimination_md, fill = Return_Ukraine), position = 'fill') + labs(title = "Figure 9: Experienced Discrimination
+]by Return Decision", x = "Experienced Discrimination", y = "Proportion")+ guides(fill=guide_legend(title="Return to UKR"))
+```
+
+Another area this analysis explores is the Night Light activity of the areas in Moldova of which the respondents are in. For this analysis, these areas are Bender, Balti, Chisinau, and Transnistria. Specifically, we looked at night light activity during the month of the respondent's arrival within the respective area in Moldova. Figure 10 demonstrates below that there was virtually no difference in the NTL sum or mean of the month and place from respondents intending to return to or leave Ukraine. This may be a biproduct of the fact that this data only spans a few months. Perhaps, if we had data over a year or more we would see more variation.
+
+```{r, fig.width=4, fig.height=3.5}
+
+b1 = ggplot(data = mutate(subset(Merged_data_NTL_clean, mean_4 < 300), Return_Ukraine = ifelse(Return_Ukraine == 1, "Yes", "No"))) + geom_boxplot(aes(x= mean_4, fill = Return_Ukraine)) + labs(title = "Mean NTL with Snow Adjustment", x = "Mean NTL")+ guides(fill=guide_legend(title="Return to UKR"))+ theme(axis.text.y=element_blank(),axis.ticks.y=element_blank())
+
+b2 = ggplot(data = mutate(Merged_data_NTL_clean, Return_Ukraine = ifelse(Return_Ukraine == 1, "Yes", "No"))) + geom_boxplot(aes(x= sum_4, fill = Return_Ukraine), show.legend = FALSE) + labs(title = "Sum NTL with Snow Adjustment", x = "Sum NTL")+ guides(fill=guide_legend(title="Return to UKR"))+ theme(axis.text.y=element_blank(),axis.ticks.y=element_blank())
+
+grid.arrange(b1, b2, top = textGrob("Figure 10: NTL data Compared to Return Intention"))
+```
+
+Continuing our analysis of NTL activity, Figure 11 below represents the percent changes in different NTL measurements of the month of the respondent's arrival to the month before their arrival in a respective area. There is little variation to be seen between return intentions of respondents. Again, with more data spread across more than just several months, notable variations may be present.
+
+
+```{r, fig.width=5, fig.height=4}
+d1= ggplot(data = mutate(Merged_data_NTL_clean, Return_Ukraine = ifelse(Return_Ukraine == 1, "Yes", "No"))) + geom_boxplot(aes(x= perc_change_max , fill = Return_Ukraine)) + labs(title = "Maximum NTL", x = "%")+ guides(fill=guide_legend(title="Return to UKR"))+ theme(axis.text.y=element_blank(),axis.ticks.y=element_blank())
+d2= ggplot(data = mutate(Merged_data_NTL_clean, Return_Ukraine = ifelse(Return_Ukraine == 1, "Yes", "No"))) + geom_boxplot(aes(x= perc_change_mean , fill = Return_Ukraine), show.legend = FALSE) + labs(title = "Mean NTL", x = "%")+ guides(fill=guide_legend(title="Return to UKR"))+ theme(axis.text.y=element_blank(),axis.ticks.y=element_blank())
+d3= ggplot(data = mutate(Merged_data_NTL_clean, Return_Ukraine = ifelse(Return_Ukraine == 1, "Yes", "No"))) + geom_boxplot(aes(x= perc_change_sum , fill = Return_Ukraine), show.legend = FALSE) + labs(title = "Sum NTL", x = "%")+ guides(fill=guide_legend(title="Return to UKR"))+ theme(axis.text.y=element_blank(),axis.ticks.y=element_blank())
+
+grid.arrange(d1, d2, d3, top = textGrob("Figure 11: NTL Percent Changes from 
+                                        month prior arrival to arrival month"))
+```
+
+
+Figure 12 below suggests that there is no notable difference in the number of days between arrival and the interview in regards to intention on returning to Ukraine. Although, the median of those with no intention of returning is several days higher than those with the intention of returning.
+
+```{r, fig.width=4.5, fig.height=2}
+ggplot(data = mutate(Merged_data_NTL_clean, Return_Ukraine = ifelse(Return_Ukraine == 1, "Yes", "No"))) + geom_boxplot(aes(x= diff_in_days, fill = Return_Ukraine)) + labs(title = "Figure 12: Days Between Respondent's 
+                               Arrival and Interview", x = "# Days Between")+ guides(fill=guide_legend(title="Return to UKR"))+ theme(axis.text.y=element_blank(),axis.ticks.y=element_blank())
+```
+
+Google Trends data was another component of this analysis we were interested in. Figure 13 below represents the Google trends number of hits for a given topic in the month of a respondent's arrival in the location of the respondent within Moldova. Because our data is monthly,and the respondent's arrival dates are only distributed across only several months, there is little variation seen between the respondent's that intend to return versus leave Ukraine. With more data, or with the availability of daily Google Trends hits, we may see more variation between intention groups. 
+
+```{r}
+c1 = ggplot(data = mutate(Merged_data_NTL_clean, Return_Ukraine = ifelse(Return_Ukraine == 1, "Yes", "No"))) + geom_boxplot(aes(x= Travel, fill =  Return_Ukraine), show.legend = FALSE) + labs(title = "Travel", x = "Hits")+ guides(fill=guide_legend(title="Return to UKR"))+ theme(axis.text.y=element_blank(),axis.ticks.y=element_blank())
+c3 = ggplot(data = mutate(Merged_data_NTL_clean, Return_Ukraine = ifelse(Return_Ukraine == 1, "Yes", "No"))) + geom_boxplot(aes(x= Fashion, fill = Return_Ukraine)) + labs(title = "Fashion", x = "Hits")+ guides(fill=guide_legend(title="Return to UKR"))+ theme(axis.text.y=element_blank(),axis.ticks.y=element_blank())
+c4 = ggplot(data = mutate(Merged_data_NTL_clean, Return_Ukraine = ifelse(Return_Ukraine == 1, "Yes", "No"))) + geom_boxplot(aes(x= Mercedes, fill = Return_Ukraine),show.legend = FALSE) + labs(title = "Mercedes", x = "Hits")+ guides(fill=guide_legend(title="Return to UKR"))+ theme(axis.text.y=element_blank(),axis.ticks.y=element_blank())
+c5= ggplot(data = mutate(Merged_data_NTL_clean, Return_Ukraine = ifelse(Return_Ukraine == 1, "Yes", "No"))) + geom_boxplot(aes(x= Loan, fill = Return_Ukraine),show.legend = FALSE) + labs(title = "Loan", x = "Hits")+ guides(fill=guide_legend(title="Return to UKR"))+ theme(axis.text.y=element_blank(),axis.ticks.y=element_blank())
+c6 = ggplot(data = mutate(Merged_data_NTL_clean, Return_Ukraine = ifelse(Return_Ukraine == 1, "Yes", "No"))) + geom_boxplot(aes(x= Fridge, fill = Return_Ukraine),show.legend = FALSE) + labs(title = "Fridge", x = "Hits")+ guides(fill=guide_legend(title="Return to UKR"))+ theme(axis.text.y=element_blank(),axis.ticks.y=element_blank())
+ grid.arrange(c1, c3, c4, c5,c6, top = textGrob("Figure 13: Google Trends Data Showing Some Variation"))
+```
+
+# Modeling
+
+For our modeling, we will fit a logistic regression model with response as the binary vairable indicating whether a respondent intends to return to Ukraine or not. Our data will be a combination of the UNHRC data and the Google Trends and NTL data matched based on arrival month and location of the repsondent.
+
+## Variables of interest 
+
+The following variables were of particular interest when considering the composition of our model
 
 * Location - The current location of the respondent in Moldova (Chisinau, Bender, Balti, or Transnistria)
-
 * Language preferences - binary variables indicating if the speaker prefers Romanian, Russian, or Ukrainian
-
 * The age of the speaker
-
 * Household accomodations - where the respondent is currently staying (hotel, with relatives, accredited refugee accomodation center (RAC), etc.)
-
 * Origin Ukrainian oblast
-
 * Binary representing whether, after the start of the war, did the respondent have to move to another place in Ukraine before coming to Moldova.
-
 * Conditions the respondent would need to change in Ukraine before you decided to return? 
-
 * Number of people in the respondent's family
-
 * Binary variable indicating if, since arriving to Moldova, has the respondent applied to enroll their child in school/kindergarten in Moldova? 
-
 * Number of people in the Moldovan household the respondent is staying in
-
 * Marital status of the household host
-
 * Binary representing if any member in the respondent's family (Ukrainian) is six months of age or younger?
-
 * Binary variables indicating if the following items are limited: adult clothing, basic hygiene, beds, heaters, children clothing, diapers, or menstrual materials.
-
 * Highest level of education attained by the head of respondent's family
-
 * Whether or not the respondent needs to learn / improve a language to integrate in Moldova work market
-
 * Occupation before the war began
-
 * Sector of occupation before the war began
-
 * If the respondent is in the same occupation since arriving in Moldova
-
 * The respondents current occupation
-
 * If the respondent needed to sell household assets/goods (radio/furniture/TV...)
-
 * If the respondent needed to withdraw children from school
-
 * If the respondent needed to sell their house/land 
-
-* Income from salary work, daily labor, personal business, savings/pension, government benefits, remittances, support from friends and family, donations, and humanitarian assistance
-
-* Expense amount on food, rent, water, non-food household items (hygiene, lightbulbs, etc), utilities, fuel (for cooking, vehicles, etc.), transportation, and communication
-
+* Total income from salary work, daily labor, personal business, savings/pension, government benefits, remittances, support from friends and family, donations, and humanitarian assistance
+* Total expense amount on food, rent, water, non-food household items (hygiene, lightbulbs, etc), utilities, fuel (for cooking, vehicles, etc.), transportation, and communication
 * Indicator whether or not every person in the respondent's family has an ID document (national ID and/or passport)?
-
 * Indicator whether or not the respondent or anyone in their family experienced what discriminatory treatment since arriving to Moldova?
-
 * The month and the year of the respondent's arrival into Moldova
-
 * The month and year which the interview took place
-
 * Number of days between the arrival and interview
-
 * The following are "hits" from google trends. Each trend was measured from 2018 to the end of 2022. The "hits" represent a normalized distribution of "hits" of a certain topic. These numbers don't represent absolute search volume numbers, because the data is normalized and presented on a scale from 0-100, where each point on the graph is divided by the highest point, or 100. A lower number of "hits" means that a search term's relative popularity is decreasing—not necessarily that the total number of searches for that term is decreasing, but that its popularity compared to other searches is shrinking. This "hits" value was found for both the month of the respondent's arrival (taken as an average of weeks within the month) as well a month before the respondent's arrival. Using this criteria, the following topics are included:
   
   ** Travel
@@ -514,106 +630,198 @@ household number is the number of people in the Moldovan household. hh_family_si
   ** Mean
   ** Sum
   ** Standard Deviation
+* A percent change in these metrics from the month prior to arrival will also be used.
   
 * In addition to this nightlight data, percent changes of the these metrics from the previous month will be used
   
 ```{r}
+Merged_data_NTL_clean$hoh_ua_occupation_same = relevel(Merged_data_NTL_clean$hoh_ua_occupation_same, ref = "no")
+Merged_data_NTL_clean$hoh_current_occupation[Merged_data_NTL_clean$hoh_current_occupation =="N/A"] = "not_working"
+Merged_data_NTL_clean$hoh_current_occupation[Merged_data_NTL_clean$hoh_current_occupation =="no_answer"] = "not_working"
+Merged_data_NTL_clean$hoh_current_occupation = relevel(Merged_data_NTL_clean$hoh_current_occupation, ref = "not_working")
 
+  
 model_data <- Merged_data_NTL_clean %>%
-  drop_na(location) %>% 
-  subset(select = c(Return_Ukraine, language_pref_ukrainian , language_pref_russian , income_formal_work, total_expense, total_income,  ))
+  drop_na(Return_Ukraine, language_pref_ukrainian , language_pref_russian , total_expense, total_income, Travel, Fashion, Mercedes, Loan, Fridge, age_speaker, hh_family_size , perc_change_max, hoh_education, Adult_clothing_limited  , beds_limited , children_clothing_limited , diapers_limited , heater_limited , kitchen_set_limited , menstrual_mat_limited , basic_hygiene_limited, none_limited, hoh_ua_occupation_same, hoh_current_occupation, lag_Travel , lag_Fashion , lag_Mercedes , lag_Loan , lag_Fridge ) %>% 
+  subset(select = c(Return_Ukraine, language_pref_ukrainian , language_pref_russian , total_expense, total_income, Travel, Fashion, Mercedes, Loan, Fridge, age_speaker, hh_family_size , perc_change_max, hoh_education, Adult_clothing_limited  , beds_limited , children_clothing_limited , diapers_limited , heater_limited , kitchen_set_limited , menstrual_mat_limited , basic_hygiene_limited, none_limited, hoh_ua_occupation_same, hoh_current_occupation, lag_Travel , lag_Fashion , lag_Mercedes , lag_Loan , lag_Fridge))
 
 full_model = glm(Return_Ukraine ~ ., family = binomial, data = model_data)
 
+#step_model = stepAIC(full_model, direction = "both")
+
+#step_model$anova
+
+step_model = glm(Return_Ukraine ~ language_pref_ukrainian + language_pref_russian + 
+    total_expense + total_income + Travel + Fashion + Mercedes + 
+    Loan + Fridge + age_speaker + hh_family_size + perc_change_max + 
+    hoh_education + Adult_clothing_limited + beds_limited + children_clothing_limited + 
+    diapers_limited + heater_limited + kitchen_set_limited + 
+    menstrual_mat_limited + basic_hygiene_limited + none_limited + 
+    hoh_ua_occupation_same + hoh_current_occupation + lag_Travel + 
+    lag_Fashion + lag_Mercedes + lag_Loan + lag_Fridge, family = binomial, data = model_data)
+
+#step_model
+
 ```
 
-So little data on income so producing results that converge to 1 or 0
+## Model Formula
+This is the full mathematical formulation of the full logistic model produced in this study.
 
+$$ \frac{\pi_i}{1-\pi_i}= \exp(\beta_0+\beta_1x_{\text{Prefer Ukrainian}i}+\beta_2x_{\text{Prefer Russian}i} + $$
+$$ ...\beta_3x_{\text{Total Expenses btwn 1,500-3,000 (vs. <1000)}i} +\beta_9x_{\text{Total Income btwn 1,000-5,000 (vs. <1000) lei}{i}}+...$$
 
-displacement_return + 
+$$ ...+\beta_{15}x_{\text{Travel}{i}} + +\beta_{16}x_{\text{Fashion,}{i}} +...+\beta_{20}x_{\text{Respondent Age}{i}} +\beta_{21}x_{\text{Respondent's family size}{i}}+ $$
 
-infant_hh + hoh_education + language_preference_need +  hoh_occupation + sum_4+ std_4 + lag_max_4 + lag_mean_4 + lag_sum_4+ hh_id_available +  hh_discrimination_md + arrival_month + diff_in_days + Travel + lag_Travel + Unemployment + lag_Unemployment
+$$ ...+\beta_{28}x_{\text{Beds Limited}{i}} +...+ \beta_{48}x_{\text{Fridge hits (month prior to arrival)}{i}} $$
 
-+location + displacement_secondary+ hoh_host_marital + infant_hh + hoh_education + language_preference_need +  hoh_occupation 
+$\pi_i$ is the "success probability" for call i. This means the probability that a respondent intends to return $\frac{\pi_i}{1-\pi_i}$ is the odds ratio, or the probability of intending to return over the probability of not. The index of observation i corresponds to each return intention. $\beta$ is a vector of logistic model coefficients in the order of "Model Output" below. For example, $\beta_{0}$ is the coefficient of the intercept. Similarly, $\beta_{3}$ is the coefficient of the `Total Expenses btwn 1,500-3,000 (vs. <1000)` $(x_3)$ variable and so on.
 
-+ hoh_ua_occupation_same  +  +income_daily_labor +  income_business + income_savings + max_4 + mean_4  +perc_change_max + perc_change_mean + perc_change_sum + basic_hygiene_limited  + expenses_rent + lag_Travel + Travel
-
-hh_family_size + age_speaker+ 
-
-
- +language_pref_romana + Adult_clothing_limited  + beds_limited + children_clothing_limited + diapers_limited + heater_limited + kitchen_set_limited + menstrual_mat_limited +  none_limited + hoh_current_occupation + csi_sold_assets + csi_spent_savings + csi_withdrew_children + csi_sold_house  + income_government + income_remittances + income_support_family + income_humanitarian_assistance + income_donations + expenses_food +  + expenses_water + expenses_nonfood +expenses_utilities + expenses_fuel + expenses_transport +expenses_communication + hh_id_available +  hh_discrimination_md + arrival_month + diff_in_days  +  + lag_Holiday + lag_Labor + lag_Unemployment + lag_Loan + lag_Washing_machine + lag_Fridge + lag_BMW + lag_Mercedes + lag_Fashion  , family = binomial
-
-
+## Model Output 
 ```{r}
-model_final <- tidy(full_model) %>%
+model_final <- tidy(step_model) %>%
   dplyr::select(-statistic) %>%
   mutate(`Confidence (2.5%)` = exp(estimate - ((1.96)*std.error)),
          `Confidence (97.5%)` = exp(estimate + ((1.96)*std.error)),
          Significant = ifelse(p.value < 0.1, "Yes", "No"),
          `P-Value` = ifelse(p.value<0.001, "<0.001", paste("","",format(round(p.value,3), nsmall = 3), sep = "&nbsp;"))) %>%
-  dplyr::select(-std.error, -p.value) %>%
+           dplyr::select(-std.error, -p.value) %>%
   mutate(estimate = exp(estimate)) %>%
-  relocate(term,estimate,`Confidence (2.5%)`,`Confidence (97.5%)`,`P-Value`)
+  relocate(term,estimate,`Confidence (2.5%)`,`Confidence (97.5%)`,`P-Value`)%>%
+  mutate(term = case_when(
+    term == "(Intercept)" ~ "Intercept",
+    term == "language_pref_ukrainian" ~ "Prefer Ukrainian",
+    term == "language_pref_russian" ~ "Prefer Russian",
+    term == "total_expense1,500-3,000" ~ "Total Expenses btwn 1,500-3,000 (vs. <1000) lei",
+    term == "total_expense10,000-15000" ~ "Total Expenses btwn 10,000-15000 (vs. <1000) lei",
+    term == "total_expense3,000-7,500" ~ "Total Expenses btwn 3,000-7,500 (vs. <1000) lei",
+    term == "total_expense500-1,500" ~ "Total Expenses btwn 500-1,500 l(vs. <1000) ei",
+    term == "total_expense7,500-10,000" ~ "Total Expenses btwn 7,500-10,000 l(vs. <1000) ei",
+    term == "total_expenseN/A" ~ "Total Expenses unknown (vs. <1000) lei",
+    term == "total_income>100,000" ~ "Total Income > 100,000 (vs. Not)",  #9 
+    term == "total_income1,000-5,000" ~ "Total Income btwn 1,000-5,000 (vs. <1000) lei",
+    term == "total_income10,000-50,000" ~ "Total Income btwn 10,000-50,000 (vs. <1000) lei",
+    term == "total_income5,000-10,000" ~ "Total Income btwn 5,000-10,000 (vs. <1000) lei",
+    term == "total_income50,000-100,000" ~ "Total Income btwn 50,000-100,000 (vs. <1000) lei",
+    term == "total_incomeN/A" ~ "Total Income unknown (vs. <1000) lei",
+    term == "Travel" ~ "Travel hits (arrival month)",
+    term == "Fashion" ~ "Fashion hits (arrival month)",
+    term == "Mercedes" ~ "Mercedes hits (arrival month)",
+    term == "Loan" ~ "Loan hits (arrival month)",
+    term == "Fridge" ~ "Fridge hits (arrival month)",
+    term == "age_speaker" ~ "Respondent Age",
+    term == "hh_family_size" ~ "Respondent's family size",
+    term == "perc_change_max" ~ "% Change in Maximum NTL from one month prior arrival - arrival",
+    term == "hoh_educationbasic_secondary" ~ "Highest Education(HH): Basic Secondary (vs. none)",
+    term == "hoh_educationcomplete_secondary_vocational" ~ "Highest Education(HH): Complete Secondary Voc. (vs. none)",
+    term == "hoh_educationbasic_higher" ~ "Highest Education(HH): Basic Higher (vs. none)",
+    term == "hoh_educationcomplete_higher" ~ "Highest Education(HH): Complete Higher (vs. none)",
+    term == "Adult_clothing_limited" ~ "Adult Clothing Limited",
+    term == "beds_limited" ~ "Beds Limited",
+    term == "heater_limited" ~ "Heating Limited",
+    term == "children_clothing_limited" ~ "Children Clothing Limited",
+    term == "diapers_limited" ~ "Diapers Limited",
+    term == "kitchen_set_limited" ~ "Cooking Items Limited",
+    term == "menstrual_mat_limited" ~ "Menstrual Material Limited",
+    term == "basic_hygiene_limited" ~ "Basic Hygiene Items Limited",
+    term == "hoh_ua_occupation_sameyes" ~ "Occupation Remained Same (vs. changed)",
+    term == "hoh_ua_occupation_sameN/A" ~ "Occupation Change NA (vs. changed)",
+    term == "none_limited" ~ "Nothing Limited",
+    term == "hoh_current_occupationcaregiver_child" ~ "Current Occupation: Caregiver (vs. not working)",
+    term == "hoh_current_occupationformal_work" ~ "Current Occupation: Formal Work (vs. not working)",
+    term == "hoh_current_occupationinformal_labor" ~ "Current Occupation: Informal Work (vs. not working)",
+    term == "hoh_current_occupationretired" ~ "Current Occupation: Retired (vs. not working)",
+    term == "hoh_current_occupationstudent" ~ "Current Occupation: Student (vs. not working)",
+    term == "hoh_current_occupationvolunteering" ~ "Current Occupation: Volunteer (vs. not working)",
+    term == "lag_Travel" ~ "Travel hits (month prior to arrival)",
+    term == "lag_Fashion" ~ "Fashion hits (month prior to arrival)",
+    term == "lag_Mercedes" ~ "Mercedes hits (month prior to arrival)",
+    term == "lag_Loan" ~ "Loan hits (month prior to arrival)",
+    term == "lag_Fridge" ~ "Fridge hits (month prior to arrival)"))
+
+
+```
+
+
+```{r echo = FALSE}
+model_final = model_final %>%
+  mutate_if(is.numeric, format, digits=4,nsmall = 0) 
+model_final %>%
+  kable(format = "markdown", digits = 3, caption = "All Variables (Full Model)")
+```
+
+## Result Discussion
+
+As seen in the model table, the results were highly disappointing. For multiple estimates, the 95% CI for a logistic regression coefficient includes both 0 and infinity. This means that the coefficient is not significantly different from 0, and the odds ratio for a one-unit change in the predictor variable could be any value between 0 and infinity. This can occur when there is a lack of statistical power to detect a significant effect or when the predictor variable is not linearly related to the outcome variable.
+
+We believe that because the time span for this data is relatively short (only a couple months) and there is a lot of missingness in the responses among an already relatively small dataset, there was a severe lack in variation amongst the predictors, thus resulting in an under-performing model. However, this methodology begs to be further built upon in later research. Collecting similar data as seen here and expanding upon it by ensuring more complete responses and over a larger period of time may allow for more meaningful future analyses to assess correlation between return intentions and other  factors.
+
+In our model, there were 2 variables deemed significant at 0.1 alpha level. The interpretations are provided below:
+
+* **Basic Hygiene Items Limited** - Holding the other variables constant, when basic hygiene items are limited (versus not), the predicted odds of a respondent intending to return vs not are multiplied by a factor of 0.272.
+
+* **Cooking Items Limited** - Holding the other variables constant, when cooking items are limited (versus not), the predicted odds of a respondent intending to return vs not are multiplied by a factor of 0.102.
+
+Both these "factors" are less than 1, meaning the odds of intending to return to Ukrain are essentially decreased rather than increased. 
+
+
+```{r}
+#PREDICTORS NOT NEEDED
+
+# displacement_return + 
+# 
+# infant_hh + hoh_education + language_preference_need +  hoh_occupation + sum_4+ std_4 + lag_max_4 + lag_mean_4 + lag_sum_4+ hh_id_available +  hh_discrimination_md + arrival_month + diff_in_days + Travel + lag_Travel + Unemployment + lag_Unemployment
+# 
+# +location + displacement_secondary+ hoh_host_marital + infant_hh + hoh_education + language_preference_need +  hoh_occupation 
+# 
+# + hoh_ua_occupation_same  +  +income_daily_labor +  income_business + income_savings + max_4 + mean_4  +perc_change_max + perc_change_mean + perc_change_sum + basic_hygiene_limited  + expenses_rent + lag_Travel + Travel
+# 
+# hh_family_size + age_speaker+ 
+#  +language_pref_romana + Adult_clothing_limited  + beds_limited + children_clothing_limited + diapers_limited + heater_limited + kitchen_set_limited + menstrual_mat_limited +  none_limited + hoh_current_occupation + csi_sold_assets + csi_spent_savings + csi_withdrew_children + csi_sold_house  + income_government + income_remittances + income_support_family + income_humanitarian_assistance + income_donations + expenses_food +  + expenses_water + expenses_nonfood +expenses_utilities + expenses_fuel + expenses_transport +expenses_communication + hh_id_available +  hh_discrimination_md + arrival_month + diff_in_days  +  + lag_Holiday + lag_Labor + lag_Unemployment + lag_Loan + lag_Washing_machine + lag_Fridge + lag_BMW + lag_Mercedes + lag_Fashion  , family = binomial
+# 
+# predictors <- c( "hh_accomodation" , "admin_oblast",  "displacement_secondary" ,"hh_family_size" , "hh_priority_needs/healthcare"  ,  "hoh_host_marital"  ,"infant_hh", "hoh_education"   ,"language_preference_need" , "hoh_occupation"  , "hoh_ocupation_sector" , "hoh_ua_occupation_same" , "hoh_current_occupation"  , "csi_sold_assets" ,"csi_spent_savings", "csi_withdrew_children"  , "csi_sold_house"  , "hh_id_available"  ,  "hh_discrimination_md"  , "diff_in_days","Travel"  ,"Holiday" ,"Labor" ,"Unemployment", "Loan"  ,  "Washing_machine"   ,    "Fridge", "BMW" ,  "Mercedes"  ,  "Fashion", "lag_Travel","lag_Holiday" ,  "lag_Labor" , "lag_Unemployment",  "lag_Loan",  "lag_Washing_machine", "lag_Fridge"  ,  "lag_BMW"  , "lag_Mercedes" , "lag_Fashion" ,"language_pref_ukrainian"   ,"language_pref_russian" ,  "total_income"  , "total_expense" , "max_4" ,"mean_4","sum_4" ,"median_4", "std_4" , "lag_max_4" ,"lag_mean_4"  ,"lag_sum_4" , "Adult_clothing_limited","basic_hygiene_limited"   ,"beds_limited",  "children_clothing_limited" ,"diapers_limited" ,"heater_limited"  ,"kitchen_set_limited","menstrual_mat_limited" ,"none_limited","perc_change_max" ,"perc_change_mean","perc_change_sum" ,"location" , "age_speaker" )
 ```
 
 
 ```{r}
-model_final
-```
+# ATTEMPT RIDGE
+# 
+# ata <- na.omit(Merged_data_NTL_clean)
+# 
+# # Split the data into predictors and response
+# numeric = subset(data, select = c("perc_change_max" ,"perc_change_mean","perc_change_sum" , "age_speaker" ,"max_4" ,"mean_4","sum_4" ,"median_4", "std_4" , "lag_max_4" ,"lag_mean_4"  ,"lag_sum_4", "diff_in_days","Travel"  ,"Holiday" ,"Labor" ,"Unemployment", "Loan"  ,  "Washing_machine"   ,    "Fridge", "BMW" ,  "Mercedes"  ,  "Fashion", "lag_Travel","lag_Holiday" ,  "lag_Labor" , "lag_Unemployment",  "lag_Loan",  "lag_Washing_machine", "lag_Fridge"  ,  "lag_BMW"  , "lag_Mercedes" , "lag_Fashion"))
+# binary = subset(data, select = c("displacement_secondary", "hh_priority_needs/healthcare" ))
+# 
+# sapply(data, levels)
+# 
+# # data %>%
+#  #     summarise_each(funs(list(levels(.))))
+# 
+# X <- data[, -1]
+# y <- data$Return_Ukraine
+# 
+# # Create dummy variables for the categorical predictors
+# X <- model.matrix(~ . -1, data = X)
+# 
+# # Standardize the predictors
+# X <- scale(X)
+# 
+# # Fit the Ridge regression model using cross-validation
+# library(glmnet)
+# fit <- cv.glmnet(X, y, alpha = 0, family = "binomial")
+# 
+# # Plot the cross-validation error as a function of lambda
+# plot(fit)
 
- %>%
-  mutate(Variable = case_when(
-    Variable == "(Intercept)" ~ "Intercept",
-    Variable == "call_madeTrue" ~ "Call Made (vs. not)",
-    Variable == "close_gameTrue" ~ "Close Game Based on Final Score (vs. not)",
-    Variable == "sec_left" ~ "Seconds Left @ Time of Play",
-    Variable == "counting" ~ "Number of Calls Made So Far in L2M",
-    Variable == "periodOvertime" ~ "Overtime (vs. Regular Time)",
-    Variable == "playoffTrue" ~ "Playoff Game (vs. Not)",
-    Variable == "starTrue" ~ "Committing Player is a Star (vs. Not)",
-    Variable == "call_typeFoul: Offensive" ~ "Offensive Foul Call (vs. Travelling Turnover Call)",
-    Variable == "call_typeFoul: Personal" ~ "Personal Foul Call (vs. Travelling Turnover Call)",
-    Variable == "call_typeFoul: Shooting" ~ "Shooting Foul Call (vs. Travelling Turnover Call)",
-    Variable == "call_typeFoul: Loose Ball" ~ "Loose Ball Foul Call (vs. Travelling Turnover Call)",
-    Variable == "committing_min_played" ~ "Minutes Played by Committing Player",
-    Variable == "committing_sidehome" ~ "Committing Player on Home Team (vs. Away Team)",
-    Variable == "James.Capers.Jr." ~ "James Capers Jr. Reffing (vs. David Jones Reffing)",
-    Variable == "disadvantaged_min_played" ~ "Minutes Played by Disadvantaged Player",
-    Variable == "Ron.Garretson" ~ "Ron Garretson Reffing (vs. David Jones Reffing)",
-    Variable == "Tony.Brown" ~ "Tony Brown Reffing (vs. David Jones Reffing)",
-    Variable == "Nick.Buchert" ~ "Nick Buchert Reffing (vs. David Jones Reffing)",
-    Variable == "Josh.Tiven" ~ "Josh Tiven Reffing (vs. David Jones Reffing)",
-    Variable == "Derek.Richardson" ~ "Derek Richardson Reffing (vs. David Jones Reffing)",
-    Variable == "Courtney.Kirkland" ~ "Courtney Kirkland Reffing (vs. David Jones Reffing)",
-    Variable == "Curtis.Blair" ~ "Curtis Blair Reffing (vs. David Jones Reffing)",
-    Variable == "Karl.Lane" ~ "Karl Lane Reffing (vs. David Jones Reffing)",
-    Variable == "Scott.Foster" ~ "Scott Foste
-
-
-
-
-
-```{r}
-look= subset(Merged_data_NTL_clean, select = c(Return_Ukraine,household_number))
 ```
 
 
 ```{r}
-sapply(lapply(Merged_data_NTL_clean, unique), length)
+#sapply(lapply(Merged_data_NTL_clean, unique), length)
 ```
-
-
-
 
 
 ```{r}
-write.csv(Merged_data_NTL_clean, file = "/Users/jessiebierschenk/Cossack Collectors/Merged_data_NTL_clean", row.names=FALSE)
-
+#write.csv(Merged_data_NTL_clean, file = "/Users/jessiebierschenk/Cossack Collectors/Merged_data_NTL_clean1.csv", row.names=FALSE)
 ```
 
-
-
-
-Probit/logit
-maybe try - random forests
 
