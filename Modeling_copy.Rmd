@@ -38,6 +38,13 @@ library(gridExtra)
 library(grid)
 library(kableExtra)
 
+library(rpart)       
+#library(caret)       
+
+library(rpart.plot)  
+library(vip)         
+library(pdp)  
+
 knitr::opts_chunk$set(echo=FALSE, warning = FALSE)
 ```
 
@@ -779,6 +786,172 @@ Both these "factors" are less than 1, meaning the odds of intending to return to
 #  +language_pref_romana + Adult_clothing_limited  + beds_limited + children_clothing_limited + diapers_limited + heater_limited + kitchen_set_limited + menstrual_mat_limited +  none_limited + hoh_current_occupation + csi_sold_assets + csi_spent_savings + csi_withdrew_children + csi_sold_house  + income_government + income_remittances + income_support_family + income_humanitarian_assistance + income_donations + expenses_food +  + expenses_water + expenses_nonfood +expenses_utilities + expenses_fuel + expenses_transport +expenses_communication + hh_id_available +  hh_discrimination_md + arrival_month + diff_in_days  +  + lag_Holiday + lag_Labor + lag_Unemployment + lag_Loan + lag_Washing_machine + lag_Fridge + lag_BMW + lag_Mercedes + lag_Fashion  , family = binomial
 # 
 # predictors <- c( "hh_accomodation" , "admin_oblast",  "displacement_secondary" ,"hh_family_size" , "hh_priority_needs/healthcare"  ,  "hoh_host_marital"  ,"infant_hh", "hoh_education"   ,"language_preference_need" , "hoh_occupation"  , "hoh_ocupation_sector" , "hoh_ua_occupation_same" , "hoh_current_occupation"  , "csi_sold_assets" ,"csi_spent_savings", "csi_withdrew_children"  , "csi_sold_house"  , "hh_id_available"  ,  "hh_discrimination_md"  , "diff_in_days","Travel"  ,"Holiday" ,"Labor" ,"Unemployment", "Loan"  ,  "Washing_machine"   ,    "Fridge", "BMW" ,  "Mercedes"  ,  "Fashion", "lag_Travel","lag_Holiday" ,  "lag_Labor" , "lag_Unemployment",  "lag_Loan",  "lag_Washing_machine", "lag_Fridge"  ,  "lag_BMW"  , "lag_Mercedes" , "lag_Fashion" ,"language_pref_ukrainian"   ,"language_pref_russian" ,  "total_income"  , "total_expense" , "max_4" ,"mean_4","sum_4" ,"median_4", "std_4" , "lag_max_4" ,"lag_mean_4"  ,"lag_sum_4" , "Adult_clothing_limited","basic_hygiene_limited"   ,"beds_limited",  "children_clothing_limited" ,"diapers_limited" ,"heater_limited"  ,"kitchen_set_limited","menstrual_mat_limited" ,"none_limited","perc_change_max" ,"perc_change_mean","perc_change_sum" ,"location" , "age_speaker" )
+```
+
+-do PCP
+-try random forests
+
+# Decision Tree
+
+With no clear take-aways from our full logistic model, we will also try using decision trees to better visualize the relationship between return intentions and our predictors. The decision tree was constructed by originally including all variables in our previous logistic model (can be seen above). 
+
+```{r}
+# run decision stump model
+dt_model_data = model_data
+ctrl <- list(cp = 0, minbucket = 5, maxdepth = 6)
+fit <- rpart(Return_Ukraine ~ ., data = dt_model_data, control = ctrl, method = "class")
+
+# plot tree 
+#printcp(fit)
+par(mar = c(1, 1, 1, 1))
+rpart.plot(fit, type=4,
+extra=101, 
+box.palette="GnBu",
+branch.lty=3, 
+shadow.col="gray", 
+nn=TRUE)
+
+# # Predict the response variable
+# predictions <- predict(fit, dt_model_data, type = "class")
+# 
+# # Calculate the overall accuracy
+# accuracy <- sum(predictions == dt_model_data$Return_Ukraine) / nrow(dt_model_data)
+# print(paste0("Overall accuracy: ", accuracy))
+```
+
+
+## Decision Tree Results Discussion
+
+The overall accuracy of our model was **89.21%**, which performs better than random choice (50%). From our results, we can see that kitchen_set_limited was selected as the first variable to split the data into two subgroups. `kitchen_set_limited` is a binary variable representing if the respondent faced limited kitchenware or cooking items. As it is the first variable that splits the data, it is the one that has the highest predictive power. This finding is mirrored in our original full logistic model as it was one of only two variables to be significant. In contrast to our full model above, the binary variable representing if basic hygiene items are limited was not included in this decision tree. Instead, our variable with the second highest predictive power is the binary variable representing if adult clothing is limited. Other variables included in this resulting decision tree are as follows:
+
+* `hh_family_size`: House hold family size - the number of people in the respondent's family that the respondent is with. This variable had an initial cutoff at above 8 members
+
+* `perc_change_max`: The percent change in maximum snow-adjusted nightlight values from the month previous to arrival to arrival month. This variable had an initial cutoff at below 0.59 %. 
+
+* `lag_Travel`: The Google trends normalized number of hits from beginning 2018 through 2022 for the topic "Travel" for the month prior to the respondent's arrival. This variable had an initial cutoff at or above 61 hits.
+
+* `age_speaker`: The age of the respondent. This variable had an initial cutoff at or above 38, and then within the older group (older than 37) a second cutoff at or above 44.
+
+* `total_income`: The total income of the respondent. This variable had an initial cutoff at a "N/A" or not "N/A" level.
+
+* `lag_Mercedes`: The Google trends normalized number of hits from beginning 2018 through 2022 for the topic "Mercedes" for the month prior to the respondent's arrival. This variable had an initial cutoff at or above 7 hits.
+
+```{r}
+dc_model = glm(Return_Ukraine ~  total_income +  age_speaker + hh_family_size + perc_change_max + 
+   Adult_clothing_limited + kitchen_set_limited +  lag_Travel + lag_Mercedes, family = binomial, data = model_data)
+
+
+dc_table <- tidy(dc_model) %>%
+  dplyr::select(-statistic) %>%
+  mutate(`Confidence (2.5%)` = exp(estimate - ((1.96)*std.error)),
+         `Confidence (97.5%)` = exp(estimate + ((1.96)*std.error)),
+         Significant = ifelse(p.value < 0.1, "Yes", "No"),
+         `P-Value` = ifelse(p.value<0.001, "<0.001", paste("","",format(round(p.value,3), nsmall = 3), sep = "&nbsp;"))) %>%
+           dplyr::select(-std.error, -p.value) %>%
+  mutate(estimate = exp(estimate)) %>%
+  relocate(term,estimate,`Confidence (2.5%)`,`Confidence (97.5%)`,`P-Value`) %>% 
+   mutate(term = case_when(
+    term == "(Intercept)" ~ "Intercept",
+    term == "language_pref_ukrainian" ~ "Prefer Ukrainian",
+    term == "language_pref_russian" ~ "Prefer Russian",
+    term == "total_expense1,500-3,000" ~ "Total Expenses btwn 1,500-3,000 (vs. <1000) lei",
+    term == "total_expense10,000-15000" ~ "Total Expenses btwn 10,000-15000 (vs. <1000) lei",
+    term == "total_expense3,000-7,500" ~ "Total Expenses btwn 3,000-7,500 (vs. <1000) lei",
+    term == "total_expense500-1,500" ~ "Total Expenses btwn 500-1,500 l(vs. <1000) ei",
+    term == "total_expense7,500-10,000" ~ "Total Expenses btwn 7,500-10,000 l(vs. <1000) ei",
+    term == "total_expenseN/A" ~ "Total Expenses unknown (vs. <1000) lei",
+    term == "total_income>100,000" ~ "Total Income > 100,000 (vs. Not)",  #9 
+    term == "total_income1,000-5,000" ~ "Total Income btwn 1,000-5,000 (vs. <1000) lei",
+    term == "total_income10,000-50,000" ~ "Total Income btwn 10,000-50,000 (vs. <1000) lei",
+    term == "total_income5,000-10,000" ~ "Total Income btwn 5,000-10,000 (vs. <1000) lei",
+    term == "total_income50,000-100,000" ~ "Total Income btwn 50,000-100,000 (vs. <1000) lei",
+    term == "total_incomeN/A" ~ "Total Income unknown (vs. <1000) lei",
+    term == "Travel" ~ "Travel hits (arrival month)",
+    term == "Fashion" ~ "Fashion hits (arrival month)",
+    term == "Mercedes" ~ "Mercedes hits (arrival month)",
+    term == "Loan" ~ "Loan hits (arrival month)",
+    term == "Fridge" ~ "Fridge hits (arrival month)",
+    term == "age_speaker" ~ "Respondent Age",
+    term == "hh_family_size" ~ "Respondent's family size",
+    term == "perc_change_max" ~ "% Change in Maximum NTL from one month prior arrival - arrival",
+    term == "hoh_educationbasic_secondary" ~ "Highest Education(HH): Basic Secondary (vs. none)",
+    term == "hoh_educationcomplete_secondary_vocational" ~ "Highest Education(HH): Complete Secondary Voc. (vs. none)",
+    term == "hoh_educationbasic_higher" ~ "Highest Education(HH): Basic Higher (vs. none)",
+    term == "hoh_educationcomplete_higher" ~ "Highest Education(HH): Complete Higher (vs. none)",
+    term == "Adult_clothing_limited" ~ "Adult Clothing Limited",
+    term == "beds_limited" ~ "Beds Limited",
+    term == "heater_limited" ~ "Heating Limited",
+    term == "children_clothing_limited" ~ "Children Clothing Limited",
+    term == "diapers_limited" ~ "Diapers Limited",
+    term == "kitchen_set_limited" ~ "Cooking Items Limited",
+    term == "menstrual_mat_limited" ~ "Menstrual Material Limited",
+    term == "basic_hygiene_limited" ~ "Basic Hygiene Items Limited",
+    term == "hoh_ua_occupation_sameyes" ~ "Occupation Remained Same (vs. changed)",
+    term == "hoh_ua_occupation_sameN/A" ~ "Occupation Change NA (vs. changed)",
+    term == "none_limited" ~ "Nothing Limited",
+    term == "hoh_current_occupationcaregiver_child" ~ "Current Occupation: Caregiver (vs. not working)",
+    term == "hoh_current_occupationformal_work" ~ "Current Occupation: Formal Work (vs. not working)",
+    term == "hoh_current_occupationinformal_labor" ~ "Current Occupation: Informal Work (vs. not working)",
+    term == "hoh_current_occupationretired" ~ "Current Occupation: Retired (vs. not working)",
+    term == "hoh_current_occupationstudent" ~ "Current Occupation: Student (vs. not working)",
+    term == "hoh_current_occupationvolunteering" ~ "Current Occupation: Volunteer (vs. not working)",
+    term == "lag_Travel" ~ "Travel hits (month prior to arrival)",
+    term == "lag_Fashion" ~ "Fashion hits (month prior to arrival)",
+    term == "lag_Mercedes" ~ "Mercedes hits (month prior to arrival)",
+    term == "lag_Loan" ~ "Loan hits (month prior to arrival)",
+    term == "lag_Fridge" ~ "Fridge hits (month prior to arrival)"))
+
+
+dc_table
+
+```
+
+
+```{r}
+# run decision stump model
+dt_model_data = model_data
+ctrl <- list(cp = 0, minbucket = 7, maxdepth = 10)
+fit <- rpart(Return_Ukraine ~ ., data = dt_model_data, control = ctrl, method = "class")
+
+# plot tree 
+#printcp(fit)
+par(mar = c(1, 1, 1, 1))
+rpart.plot(fit)
+
+# Predict the response variable
+predictions <- predict(fit, dt_model_data, type = "class")
+
+# Calculate the overall accuracy
+accuracy <- sum(predictions == dt_model_data$Return_Ukraine) / nrow(dt_model_data)
+print(paste0("Overall accuracy: ", accuracy))
+```
+
+
+
+```{r}
+
+# plot decision boundary
+dt_model_data %>%
+  mutate(pred = predict(fit, dt_model_data)) %>%
+  ggplot(aes(age_speaker, Return_Ukraine)) +
+  geom_point(alpha = .2, size = 1) +
+  geom_line(aes(age_speaker, Return_Ukraine), color = "blue", size = .75) +
+  geom_line(aes(y = pred), color = "red", size = .75) +
+  geom_segment(x = 3.1, xend = 3.1, y = -Inf, yend = -.95,
+               arrow = arrow(length = unit(0.25,"cm")), size = .25) +
+  annotate("text", x = 3.1, y = -Inf, label = "split", hjust = 1.2, vjust = -1, size = 3) +
+  geom_segment(x = 5.5, xend = 6, y = 2, yend = 2, size = .75, color = "blue") +
+  geom_segment(x = 5.5, xend = 6, y = 1.7, yend = 1.7, size = .75, color = "red") +
+  annotate("text", x = 5.3, y = 2, label = "truth", hjust = 1, size = 3, color = "blue") +
+  annotate("text", x = 5.3, y = 1.7, label = "decision boundary", hjust = 1, size = 3, color = "red")
+
+
+# fit depth 3 decision tree
+ctrl <- list(cp = 0, minbucket = 5, maxdepth = 3)
+fit <- rpart(Return_Ukraine ~ age_speaker, data = dt_model_data, control = ctrl)
+rpart.plot(fit)
+
+
 ```
 
 
