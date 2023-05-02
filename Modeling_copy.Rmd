@@ -566,14 +566,13 @@ grid.arrange(d1, d2, d3, top = textGrob("Figure 11: NTL Percent Changes from
 
 The first figure Figure 12 below suggests that there is no notable difference in the number of days between arrival and the interview in regards to intention on returning to Ukraine. Although, the median of those with no intention of returning is several days higher than those with the intention of returning. However, there is noticeable variation when the figures are separated by location in Moldova. For respondents where there was no recorded location or in Balti, the distribution of days between arrival and interview for respondents not intending to return to Ukraine is less compared to respondents intending to return. The reverse is seen for Transnistria, Chisinau, and Bender.
 
-```{r, fig.width=4.5, fig.height=2}
+```{r, fig.width=6, fig.height=5}
 
-ggplot(data = mutate(Merged_data_NTL_clean, Return_Ukraine = ifelse(Return_Ukraine == 1, "Yes", "No"))) + geom_boxplot(aes(x= diff_in_days, fill = Return_Ukraine)) + labs(title = "Figure 12: Days Between Respondent's Arrival and Interview 
-  by Return Intention", x = "# Days Between")+ guides(fill=guide_legend(title="Return to UKR"))
+k1 = ggplot(data = mutate(Merged_data_NTL_clean, Return_Ukraine = ifelse(Return_Ukraine == 1, "Yes", "No"))) + geom_boxplot(aes(x= diff_in_days, fill = Return_Ukraine)) + labs(title = "By Return Intention", x = "# Days Between")+ guides(fill=guide_legend(title="Return to UKR"))
 
-ggplot(data = mutate(Merged_data_NTL_clean, Return_Ukraine = ifelse(Return_Ukraine == 1, "Yes", "No"))) + geom_boxplot(aes(x= diff_in_days, y = location, fill = Return_Ukraine)) + labs(title = "Figure 12: Days Between Respondent's Arrival and Interview 
-  by location and Return Intention", x = "# Days Between")+ guides(fill=guide_legend(title="Return to UKR"))
+k2 = ggplot(data = mutate(Merged_data_NTL_clean, Return_Ukraine = ifelse(Return_Ukraine == 1, "Yes", "No"))) + geom_boxplot(aes(x= diff_in_days, y = location, fill = Return_Ukraine), show.legend = FALSE) + labs(title = "By Location and Return Intention", x = "# Days Between")+ guides(fill=guide_legend(title="Return to UKR"))
 
+grid.arrange(k1, k2, top = textGrob("Figure 12: Days Between Respondent's Arrival and Interview "))
 ```
 
 Google Trends data was another component of this analysis we were interested in. Figure 13 below represents the Google trends number of hits for a given topic in the month of a respondent's arrival in the location of the respondent within Moldova. Because our data is monthly,and the respondent's arrival dates are only distributed across only several months, there is little variation seen between the respondent's that intend to return versus leave Ukraine. Additionally, Google trends also picks up the searches of the existing/indigenous popualtion. With more data, or with the availability of daily Google Trends hits, we may see more variation between intention groups. 
